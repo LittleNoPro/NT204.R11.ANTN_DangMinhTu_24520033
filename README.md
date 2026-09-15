@@ -10,19 +10,12 @@
 .
 ├── docs
 │   └── Bai-tap-01_Packet_Capture_Parser_IDS.pdf
-├── __pycache__
-│   └── main.cpython-311.pyc
 ├── README.md
 ├── src
 │   ├── main.py
 │   ├── parse_application.py
 │   ├── parse_network.py
 │   ├── parse_transport.py
-│   └── __pycache__
-│       ├── main.cpython-311.pyc
-│       ├── parse_application.cpython-311.pyc
-│       ├── parse_network.cpython-311.pyc
-│       └── parse_transport.cpython-311.pyc
 ├── TEST
 │   └── BaiTap1
 │       └── 2.YeuCauChucNang
