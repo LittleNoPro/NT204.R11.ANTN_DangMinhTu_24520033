@@ -34,7 +34,7 @@
 ```
 
 ### Use AI
-- Model: `Big Pickle (OpenCode)'
+- Model: `Big Pickle (OpenCode)`
 - AI helps in `src/parse_application.py` 
 
 ### References
