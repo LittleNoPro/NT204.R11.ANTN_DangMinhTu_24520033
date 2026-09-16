@@ -18,12 +18,15 @@ def parse_transport(packet):
 
     elif UDP in packet:
         udp = packet[UDP]
+        payload = bytes(udp.payload) if Raw in udp else b"" 
 
         return {
             "protocol": "UDP",
             "src_port": udp.sport,
             "dst_port": udp.dport,
             "length": udp.len,
+            "payload_length": len(payload),
+            "payload_preview": payload[:128].decode("utf-8", errors="ignore")
         }
 
     elif ICMP in packet:
