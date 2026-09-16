@@ -1,8 +1,9 @@
-from scapy.all import TCP, UDP, ICMP
+from scapy.all import TCP, UDP, ICMP, Raw
 
 def parse_transport(packet):
     if TCP in packet:
         tcp = packet[TCP]
+        payload = bytes(tcp.payload) if Raw in tcp else b""
 
         return {
             "protocol": "TCP",
@@ -11,6 +12,8 @@ def parse_transport(packet):
             "flags": str(tcp.flags),
             "seq": tcp.seq,
             "ack": tcp.ack,
+            "payload_length": len(payload), 
+            "payload_preview": payload[:128].decode("utf-8", errors="ignore") if payload else None,
         }
 
     elif UDP in packet:
