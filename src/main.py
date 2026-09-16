@@ -1,5 +1,6 @@
-import argparse
 import time
+import json
+import argparse
 from scapy.all import Ether, IP, IPv6, ICMP, TCP, UDP, sniff, DNS, DNSQR, Raw
 from scapy.layers.http import HTTPRequest, HTTPResponse
 
@@ -21,7 +22,9 @@ def process_packet(packet, timestamp):
 def handle_packet(packet):
     timestamp = float(packet.time)
     event = process_packet(packet, timestamp)
-    print(event)
+
+    print("=" * 80)
+    print(json.dumps(event, indent=4, default=str))
   
 def live_capture(interface, num):
     sniff(
@@ -30,7 +33,6 @@ def live_capture(interface, num):
         store=False,
         count=num,
     )
-
 
 def pcap_capture(filename, num):
     sniff(

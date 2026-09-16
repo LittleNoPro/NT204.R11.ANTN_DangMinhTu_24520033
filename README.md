@@ -31,4 +31,4 @@
 - AI helps in `src/parse_application.py` 
 
 ### References
-[1] https://medium.com/@mujtabaeisa9/building-a-packet-sniffer-in-python-as-a-cybersecurity-student-c24c8a2572d1
+- [1] https://medium.com/@mujtabaeisa9/building-a-packet-sniffer-in-python-as-a-cybersecurity-student-c24c8a2572d1
