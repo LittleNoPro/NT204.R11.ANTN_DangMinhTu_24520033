@@ -88,6 +88,7 @@ def parse_application(packet):
             result = {
                 **schema,
                 "protocol": "DNS",
+                "type": "query" if dns.qr == 0 else "response",
                 "id": dns.id, "qr": dns.qr,
                 "opcode": dns.opcode, "rcode": dns.rcode,
                 "question_count": dns.qdcount, "answer_count": dns.ancount,
