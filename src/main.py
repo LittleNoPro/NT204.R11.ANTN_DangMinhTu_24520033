@@ -1,4 +1,3 @@
-import time
 import json
 import argparse
 from scapy.all import Ether, IP, IPv6, ICMP, TCP, UDP, sniff, DNS, DNSQR, Raw
@@ -19,25 +18,35 @@ def process_packet(packet, timestamp):
     return event
 
 
-def handle_packet(packet):
-    timestamp = float(packet.time)
-    event = process_packet(packet, timestamp)
+def create_handler(outfile):
+    state = {"packet_id": 0, "outfile": outfile}
 
-    print("=" * 80)
-    print(json.dumps(event, indent=4, default=str))
-  
-def live_capture(interface, num):
+    def handle_packet(packet):
+        state["packet_id"] += 1
+        timestamp = float(packet.time)
+        event = process_packet(packet, timestamp)
+        event["packet_id"] = state["packet_id"]
+
+        line = json.dumps(event, default=str)
+        state["outfile"].write(line + "\n")
+
+        print(line)
+
+    return handle_packet
+
+
+def live_capture(interface, num, outfile):
     sniff(
         iface=interface,
-        prn=handle_packet,
+        prn=create_handler(outfile),
         store=False,
         count=num,
     )
 
-def pcap_capture(filename, num):
+def pcap_capture(filename, num, outfile):
     sniff(
         offline=filename,
-        prn=handle_packet,
+        prn=create_handler(outfile),
         store=False,
         count=num,
     )
@@ -48,10 +57,12 @@ if __name__ == "__main__":
     group.add_argument("--interface")
     group.add_argument("--pcap")
     parser.add_argument("--count", type=int, default=10)
+    parser.add_argument("--output", default="output.jsonl")
 
     args = parser.parse_args()
 
-    if args.interface:
-        live_capture(args.interface, args.count)
-    elif args.pcap:
-        pcap_capture(args.pcap, args.count)
+    with open(args.output, "w", encoding="utf-8") as outfile:
+        if args.interface:
+            live_capture(args.interface, args.count, outfile)
+        elif args.pcap:
+            pcap_capture(args.pcap, args.count, outfile)
