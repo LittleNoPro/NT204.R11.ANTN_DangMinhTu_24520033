@@ -5,25 +5,15 @@
 - `Scapy`: to capture and parse newwork packets.
 - `argparse`: to allow command-line arguments for interface selection and filtering. 
 
-### Project Tree
+### Usage
 ```
-.
-├── docs
-│   └── Bai-tap-01_Packet_Capture_Parser_IDS.pdf
-├── README.md
-├── src
-│   ├── main.py
-│   ├── parse_application.py
-│   ├── parse_network.py
-│   ├── parse_transport.py
-├── TEST
-│   └── BaiTap1
-│       └── 2.YeuCauChucNang
-│           ├── LiveCapture
-│           │   └── image.png
-│           └── PCAP_Import
-│               └── image.png
-└── ultimate_wireshark_protocols_pcap_220213.pcap
+  python src/main.py --pcap test.pcap --count 10 --output out.jsonl
+  sudo python src/main.py --interface wlan0 --count 20
+```
+
+### Output Format
+``` 
+  {"packet_id":1,"timestamp":...,"network":{...},"transport":{...},"application":{...}}
 ```
 
 ### Use AI
