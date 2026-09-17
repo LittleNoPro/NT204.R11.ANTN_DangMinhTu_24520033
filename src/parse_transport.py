@@ -13,7 +13,7 @@ def parse_transport(packet):
             "seq": tcp.seq,
             "ack": tcp.ack,
             "payload_length": len(payload), 
-            "payload_preview": payload[:128].decode("utf-8", errors="ignore") if payload else None,
+            "payload_preview": payload[:].decode("utf-8", errors="ignore") if payload else None,
         }
 
     elif UDP in packet:
@@ -26,7 +26,7 @@ def parse_transport(packet):
             "dst_port": udp.dport,
             "length": udp.len,
             "payload_length": len(payload),
-            "payload_preview": payload[:128].decode("utf-8", errors="ignore")
+            "payload_preview": payload[:].decode("utf-8", errors="ignore")
         }
 
     elif ICMP in packet:
