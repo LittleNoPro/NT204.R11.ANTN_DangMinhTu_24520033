@@ -1,7 +1,6 @@
 from scapy.all import DNS, DNSQR, Raw, TCP, UDP
 from scapy.layers.http import HTTPRequest, HTTPResponse
 
-# Normalized schema: mọi packet đều trả đúng các key này (thiếu thì None)
 def parse_application(packet):
     schema = {
         "protocol": None,
@@ -38,6 +37,11 @@ def parse_application(packet):
         "answers": None,
         "query_name": None,
         "query_type": None,
+        # SMTP
+        "smtp_command": None,
+        "smtp_argument": None,
+        "smtp_status": None,
+        "smtp_message": None,
         # error
         "parse_error": None,
     }
@@ -81,6 +85,11 @@ def parse_application(packet):
     RESPONSE_HEADER_KEYS = ("date", "server", "content-type", "content-length",
                             "connection", "keep-alive", "cache-control",
                             "location", "set-cookie", "content-encoding")
+
+    SMTP_PORTS = (25, 465, 587)
+
+    SMTP_COMMANDS = ("HELO", "EHLO", "MAIL", "RCPT", "DATA", "QUIT",
+                     "RSET", "NOOP", "VRFY", "EXPN", "STARTTLS", "AUTH", "BDAT")
 
     try:
         # 1. DNS
@@ -186,7 +195,52 @@ def parse_application(packet):
                 result["body_length"], result["body"] = __http_body(payload)
                 return result
 
-        # 5. Port-based hint (fallback)
+        # 5. SMTP (port 25/465/587)
+        if TCP in packet:
+            tcp = packet[TCP]
+            if tcp.sport in SMTP_PORTS or tcp.dport in SMTP_PORTS:
+                if Raw in packet:
+                    line = bytes(packet[Raw].load).split(b"\r\n", 1)[0]
+                    line_str = line.decode("utf-8", errors="ignore")
+
+                    # SMTP response: "250 mail.webertest.net" hoac "220-..."
+                    if len(line_str) >= 3 and line_str[:3].isdigit():
+                        status = line_str[:3]
+                        if len(line_str) > 4 and line_str[3] in (" ", "-"):
+                            return {
+                                **schema,
+                                "protocol": "SMTP", "type": "response",
+                                "smtp_status": status,
+                                "smtp_message": line_str[4:],
+                            }
+                        return {
+                            **schema,
+                            "protocol": "SMTP", "type": "response",
+                            "smtp_status": status,
+                        }
+
+                    # SMTP command: "HELO localhost", "MAIL FROM: <>", ...
+                    keyword = line_str.split(" ", 1)[0].upper()
+                    if keyword in SMTP_COMMANDS:
+                        argument = line_str[len(keyword):].strip()
+                        return {
+                            **schema,
+                            "protocol": "SMTP", "type": "command",
+                            "smtp_command": keyword,
+                            "smtp_argument": argument if argument else None,
+                        }
+
+                    return {
+                        **schema,
+                        "protocol": "SMTP", "type": "UNKNOWN",
+                    }
+
+                return {
+                    **schema,
+                    "protocol": "SMTP", "type": "UNKNOWN",
+                }
+
+        # 6. Port-based hint (fallback)
         if TCP in packet:
             tcp = packet[TCP]
             http_ports = (80, 8000, 8080, 8888)
@@ -204,7 +258,7 @@ def parse_application(packet):
                     "protocol": "DNS",
                 }
 
-        # 6. Unknown
+        # 7. Unknown
         return {
             **schema,
             "protocol": "UNKNOWN",
