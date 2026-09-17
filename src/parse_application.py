@@ -35,6 +35,7 @@ def parse_application(packet):
         "rcode": None,
         "question_count": None,
         "answer_count": None,
+        "answers": None,
         "query_name": None,
         "query_type": None,
         # error
@@ -97,6 +98,18 @@ def parse_application(packet):
                 q = packet[DNSQR]
                 result["query_name"] = safe_decode(q.qname)
                 result["query_type"] = q.qtype
+
+            # DNS Response: parse cac answer (neu co)
+            if result["qr"] == 1 and result["answer_count"] > 0:
+                answers = []
+                for answer in dns.an:
+                    answers.append({
+                        "name": safe_decode(getattr(answer, "rrname", None)),
+                        "type": getattr(answer, "type", None),
+                        "ttl": getattr(answer, "ttl", None),
+                        "data": safe_decode(getattr(answer, "rdata", None)),
+                    })
+                result["answers"] = answers
             return result
 
         # 2. HTTP Request (Scapy parsed)

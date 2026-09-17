@@ -1,0 +1,192 @@
+================================================================================
+{
+    "timestamp": 1430248899.883275,
+    "network": {
+        "protocol": "IPv4",
+        "src_ip": "192.168.2.1",
+        "dst_ip": "192.168.2.102",
+        "ttl": 64,
+        "hop_limit": null
+    },
+    "transport": {
+        "protocol": "UDP",
+        "src_port": 53,
+        "dst_port": 56606,
+        "flags": null,
+        "seq": null,
+        "ack": null,
+        "length": 50,
+        "type": null,
+        "code": null,
+        "payload_length": 0,
+        "payload": null
+    },
+    "application": {
+        "protocol": "DNS",
+        "type": "response",
+        "method": null,
+        "host": null,
+        "path": null,
+        "version": null,
+        "user_agent": null,
+        "status_code": null,
+        "reason": null,
+        "body_length": null,
+        "body": null,
+        "date": null,
+        "server": null,
+        "content_type": null,
+        "content_length": null,
+        "content_encoding": null,
+        "connection": null,
+        "keep_alive": null,
+        "cache_control": null,
+        "location": null,
+        "set_cookie": null,
+        "id": 47263,
+        "qr": 1,
+        "opcode": 0,
+        "rcode": 0,
+        "question_count": 1,
+        "answer_count": 1,
+        "answers": [
+            {
+                "name": "heise.de.",
+                "type": 1,
+                "ttl": 46,
+                "data": "193.99.144.80"
+            }
+        ],
+        "query_name": "heise.de.",
+        "query_type": 1,
+        "parse_error": null
+    }
+}
+================================================================================
+{
+    "timestamp": 1430248899.902594,
+    "network": {
+        "protocol": "IPv4",
+        "src_ip": "192.168.2.1",
+        "dst_ip": "192.168.2.102",
+        "ttl": 64,
+        "hop_limit": null
+    },
+    "transport": {
+        "protocol": "UDP",
+        "src_port": 53,
+        "dst_port": 41635,
+        "flags": null,
+        "seq": null,
+        "ack": null,
+        "length": 85,
+        "type": null,
+        "code": null,
+        "payload_length": 0,
+        "payload": null
+    },
+    "application": {
+        "protocol": "DNS",
+        "type": "response",
+        "method": null,
+        "host": null,
+        "path": null,
+        "version": null,
+        "user_agent": null,
+        "status_code": null,
+        "reason": null,
+        "body_length": null,
+        "body": null,
+        "date": null,
+        "server": null,
+        "content_type": null,
+        "content_length": null,
+        "content_encoding": null,
+        "connection": null,
+        "keep_alive": null,
+        "cache_control": null,
+        "location": null,
+        "set_cookie": null,
+        "id": 55290,
+        "qr": 1,
+        "opcode": 0,
+        "rcode": 0,
+        "question_count": 1,
+        "answer_count": 1,
+        "answers": [
+            {
+                "name": "80.144.99.193.in-addr.arpa.",
+                "type": 12,
+                "ttl": 47665,
+                "data": "redirector.heise.de."
+            }
+        ],
+        "query_name": "80.144.99.193.in-addr.arpa.",
+        "query_type": 12,
+        "parse_error": null
+    }
+}
+================================================================================
+{
+    "timestamp": 1430248900.897619,
+    "network": {
+        "protocol": "IPv4",
+        "src_ip": "192.168.2.1",
+        "dst_ip": "192.168.2.102",
+        "ttl": 64,
+        "hop_limit": null
+    },
+    "transport": {
+        "protocol": "UDP",
+        "src_port": 53,
+        "dst_port": 39208,
+        "flags": null,
+        "seq": null,
+        "ack": null,
+        "length": 85,
+        "type": null,
+        "code": null,
+        "payload_length": 0,
+        "payload": null
+    },
+    "application": {
+        "protocol": "DNS",
+        "type": "response",
+        "method": null,
+        "host": null,
+        "path": null,
+        "version": null,
+        "user_agent": null,
+        "status_code": null,
+        "reason": null,
+        "body_length": null,
+        "body": null,
+        "date": null,
+        "server": null,
+        "content_type": null,
+        "content_length": null,
+        "content_encoding": null,
+        "connection": null,
+        "keep_alive": null,
+        "cache_control": null,
+        "location": null,
+        "set_cookie": null,
+        "id": 64346,
+        "qr": 1,
+        "opcode": 0,
+        "rcode": 0,
+        "question_count": 1,
+        "answer_count": 1,
+        "answers": [
+            {
+                "name": "80.144.99.193.in-addr.arpa.",
+                "type": 12,
+                "ttl": 47664,
+                "data": "redirector.heise.de."
+            }
+        ],
+        "query_name": "80.144.99.193.in-addr.arpa.",
+        "query_type": 12,
+        "parse_error": null
+    }
+}
