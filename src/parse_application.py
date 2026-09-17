@@ -26,9 +26,11 @@ def parse_application(packet):
         return result
 
     def __http_body(payload):
-        if payload and b"\r\n\r\n" in payload:
-            body = payload.split(b"\r\n\r\n", 1)[1]
-            return len(body), body.decode("utf-8", errors="ignore")
+        if payload:
+            sep = b"\r\n\r\n" if b"\r\n\r\n" in payload else b"\n\n"
+            if sep in payload:
+                body = payload.split(sep, 1)[1]
+                return len(body), body.decode("utf-8", errors="ignore")
         return 0, None
 
     HTTP_METHODS = (b"GET ", b"POST ", b"PUT ", b"DELETE ", b"HEAD ",
@@ -67,20 +69,24 @@ def parse_application(packet):
         # 3. HTTP Response (Scapy parsed)
         if HTTPResponse in packet:
             h = packet[HTTPResponse]
+            body_len, body = __http_body(bytes(packet[TCP].payload))
             return {
                 "protocol": "HTTP", "type": "response",
                 "version": _get_attr(h, "Http_Version"),
                 "status_code": _get_attr(h, "Status_Code"),
                 "reason": _get_attr(h, "Reason_Phrase"),
+                "body_length": body_len,
+                "body": body,
             }
 
         # 4. Payload-based detection
         if Raw in packet:
             payload = bytes(packet[Raw].load)
+            text = payload.decode("utf-8", errors="ignore")
 
             # HTTP Request from raw payload
             if any(payload.startswith(m) for m in HTTP_METHODS):
-                lines = payload.decode("utf-8", errors="ignore").split("\r\n")
+                lines = text.split("\r\n") if "\r\n" in text else text.split("\n")
                 result = {"protocol": "HTTP", "type": "request",
                           "method": None, "host": None, "path": None, "version": None}
                 if lines:
@@ -93,7 +99,7 @@ def parse_application(packet):
 
             # HTTP Response from raw payload
             if payload.startswith(b"HTTP/"):
-                lines = payload.decode("utf-8", errors="ignore").split("\r\n")
+                lines = text.split("\r\n") if "\r\n" in text else text.split("\n")
                 result = {"protocol": "HTTP", "type": "response",
                           "version": None, "status_code": None, "reason": None}
                 if lines:
@@ -102,6 +108,7 @@ def parse_application(packet):
                     if len(parts) >= 2: result["status_code"] = parts[1]
                     if len(parts) >= 3: result["reason"] = parts[2]
                 result.update(_parse_headers(lines[1:], ["content-type", "content-length", "server"]))
+                result["body_length"], result["body"] = __http_body(payload)
                 return result
 
         # 5. Port-based hint (fallback)
