@@ -25,6 +25,12 @@ def parse_application(packet):
                     break
         return result
 
+    def __http_body(payload):
+        if payload and b"\r\n\r\n" in payload:
+            body = payload.split(b"\r\n\r\n", 1)[1]
+            return len(body), body.decode("utf-8", errors="ignore")
+        return 0, None
+
     HTTP_METHODS = (b"GET ", b"POST ", b"PUT ", b"DELETE ", b"HEAD ",
                     b"OPTIONS ", b"PATCH ", b"CONNECT ", b"TRACE ")
 
@@ -46,6 +52,7 @@ def parse_application(packet):
         # 2. HTTP Request (Scapy parsed)
         if HTTPRequest in packet:
             h = packet[HTTPRequest]
+            body_len, body = __http_body(bytes(packet[TCP].payload))
             return {
                 "protocol": "HTTP", "type": "request",
                 "method": _get_attr(h, "Method"),
@@ -53,6 +60,8 @@ def parse_application(packet):
                 "path": _get_attr(h, "Path"),
                 "version": _get_attr(h, "Http_Version"),
                 "user_agent": _get_attr(h, "User_Agent"),
+                "body_length": body_len,
+                "body": body,
             }
 
         # 3. HTTP Response (Scapy parsed)
@@ -79,6 +88,7 @@ def parse_application(packet):
                     if len(parts) >= 3:
                         result["method"], result["path"], result["version"] = parts[0], parts[1], parts[2]
                 result.update(_parse_headers(lines[1:], ["host", "user-agent", "content-type", "content-length"]))
+                result["body_length"], result["body"] = __http_body(payload)
                 return result
 
             # HTTP Response from raw payload
