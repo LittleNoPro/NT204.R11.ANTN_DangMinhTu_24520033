@@ -9,12 +9,26 @@
 ```
   python src/main.py --pcap test.pcap --count 10 --output out.jsonl
   sudo python src/main.py --interface wlan0 --count 20
+  python src/main.py --pcap test.pcap --count 10 --output out.jsonl --pretty
 ```
 
 ### Output Format
+Compact (mặc định, 1 packet = 1 dòng — dùng để máy đọc / jq):
 ``` 
   {"packet_id":1,"timestamp":...,"network":{...},"transport":{...},"application":{...}}
 ```
+
+Pretty (`--pretty`, 1 packet = nhiều dòng, thụt lề 2 spaces — dùng để đọc):
+``` 
+  {
+    "timestamp": ...,
+    "network": { "protocol": "IPv4", "src_ip": ..., "dst_ip": ..., "ttl": ... },
+    "transport": { "protocol": "TCP", "src_port": ..., "dst_port": ..., ... },
+    "application": { "protocol": "HTTP", "type": "request", ... },
+    "packet_id": 1
+  }
+```
+File `--pretty` vẫn là JSON hợp lệ (nhiều document nối nhau): đọc bằng `jq -s '.' out.jsonl` hoặc `jq '.' out.jsonl`.
 
 ### Use AI
 - Model: `Big Pickle (OpenCode)`

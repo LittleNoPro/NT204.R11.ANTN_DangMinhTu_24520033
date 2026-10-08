@@ -18,7 +18,7 @@ def process_packet(packet, timestamp):
     return event
 
 
-def create_handler(outfile):
+def create_handler(outfile, pretty=False):
     state = {"packet_id": 0, "outfile": outfile}
 
     def handle_packet(packet):
@@ -27,26 +27,30 @@ def create_handler(outfile):
         event = process_packet(packet, timestamp)
         event["packet_id"] = state["packet_id"]
 
-        line = json.dumps(event, default=str)
-        state["outfile"].write(line + "\n")
+        if pretty:
+            text = json.dumps(event, default=str, indent=2, ensure_ascii=False)
+            state["outfile"].write(text + "\n")
+        else:
+            text = json.dumps(event, default=str, ensure_ascii=False)
+            state["outfile"].write(text + "\n")
 
-        print(line)
+        print(text, flush=True)
 
     return handle_packet
 
 
-def live_capture(interface, num, outfile):
+def live_capture(interface, num, outfile, pretty=False):
     sniff(
         iface=interface,
-        prn=create_handler(outfile),
+        prn=create_handler(outfile, pretty),
         store=False,
         count=num,
     )
 
-def pcap_capture(filename, num, outfile):
+def pcap_capture(filename, num, outfile, pretty=False):
     sniff(
         offline=filename,
-        prn=create_handler(outfile),
+        prn=create_handler(outfile, pretty),
         store=False,
         count=num,
     )
@@ -58,11 +62,12 @@ if __name__ == "__main__":
     group.add_argument("--pcap")
     parser.add_argument("--count", type=int, default=10)
     parser.add_argument("--output", default="output.jsonl")
+    parser.add_argument("--pretty", action="store_true")
 
     args = parser.parse_args()
 
     with open(args.output, "w", encoding="utf-8") as outfile:
         if args.interface:
-            live_capture(args.interface, args.count, outfile)
+            live_capture(args.interface, args.count, outfile, args.pretty)
         elif args.pcap:
-            pcap_capture(args.pcap, args.count, outfile)
+            pcap_capture(args.pcap, args.count, outfile, args.pretty)
