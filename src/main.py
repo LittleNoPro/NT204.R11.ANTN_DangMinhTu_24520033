@@ -5,7 +5,8 @@ from scapy.layers.http import HTTPRequest, HTTPResponse
 
 from parse_network import parse_network 
 from parse_transport import parse_transport
-from parse_application import parse_application 
+from parse_application import parse_application
+from pipeline import run_event
 
 def process_packet(packet, timestamp):
     event = {
@@ -15,7 +16,7 @@ def process_packet(packet, timestamp):
         "application": parse_application(packet)
     }
 
-    return event
+    return run_event(event)
 
 
 def create_handler(outfile, pretty=False):
