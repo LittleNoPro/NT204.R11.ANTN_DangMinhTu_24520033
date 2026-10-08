@@ -25,7 +25,7 @@ Pretty (`--pretty`, 1 packet = nhiều dòng, thụt lề 2 spaces — dùng đ�
     "network": { "protocol": "IPv4", "src_ip": ..., "dst_ip": ..., "ttl": ... },
     "transport": { "protocol": "TCP", "src_port": ..., "dst_port": ..., ... },
     "application": { "protocol": "HTTP", "type": "request", ... },
-    "decoder": { "uri_raw": ..., "uri_decoded": ..., "decode_status": ..., ... },
+    "decoder": { "uri_decoded": ..., "decode_method": ..., "decode_status": ..., ... },
     "preprocess": { "preprocess_status": ..., "processing_action": ..., "reason": ..., "normalized": { ... } },
     "flow": { "flow_id": ..., "direction": ..., "state": ... },
     "packet_id": 1

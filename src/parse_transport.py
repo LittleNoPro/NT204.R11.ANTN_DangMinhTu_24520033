@@ -13,7 +13,6 @@ def parse_transport(packet):
         "type": None,
         "code": None,
         "payload_length": None,
-        "payload": None,
         "payload_b64": None,
     }
 
@@ -31,7 +30,6 @@ def parse_transport(packet):
                 "seq": tcp.seq,
                 "ack": tcp.ack,
                 "payload_length": len(payload),
-                "payload": payload.decode("utf-8", errors="ignore") if payload else None,
                 "payload_b64": base64.b64encode(payload).decode("ascii") if payload else None,
             }
 
@@ -46,7 +44,6 @@ def parse_transport(packet):
                 "dst_port": udp.dport,
                 "length": udp.len,
                 "payload_length": len(payload),
-                "payload": payload.decode("utf-8", errors="ignore") if payload else None,
                 "payload_b64": base64.b64encode(payload).decode("ascii") if payload else None,
             }
 

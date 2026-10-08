@@ -13,7 +13,6 @@ from parse_application import parse_application
 # giá trị vào 3 section dưới đây. Thiếu dữ liệu → null (field) / [] (list).
 # =============================================================================
 DECODER_SECTION_SCHEMA = {
-    "uri_raw": None,
     "uri_decoded": None,
     "text_decoded": None,
     "body_decoded": None,
