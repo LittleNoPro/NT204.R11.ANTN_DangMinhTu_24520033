@@ -145,14 +145,20 @@ def make_event(**overrides):
 
 ---
 
-## 5. Phase 0 — Chuẩn bị (2 commit)
+## 5. Phase 0 — Chuẩn bị
 
-1. Thêm vào `.gitignore`: `output.jsonl`, `extracted.pcap`, `.verify/`
+1. [x] Scratch vào `.gitignore` — **pattern phải có `/` đầu (root-anchored)**,
+   nếu không sẽ vô tình ignore luôn `TEST/*/output.jsonl` (bắt buộc phải track):
+   ```
+   # Scratch (bai-tap-02)
+   /output.jsonl
+   /extracted.pcap
+   .verify/
+   ```
    → `git add .gitignore && git commit -m "update gitignore"`
-2. Commit đề bài:
-   → `git add docs/Bai-tap-02_Decoder_Preprocessor_Flow_Tracker_IDS.pdf && git commit -m "add bai-tap-02 spec"`
-3. Test framework: `.venv/bin/pip install pytest` (offline → dùng `unittest` stdlib, chỉnh lại tên lệnh trong GUIDE này).
-4. Commit GUIDE.md này: `git add GUIDE.md && git commit -m "add testcase guide"`
+2. [x] Đề bài → `git commit -m "add bai-tap-02 spec"` (đã nằm trong `05de476`)
+3. [x] Test framework: đã cài `pytest 9.1.1` vào `.venv` (không cần commit).
+4. [x] GUIDE.md này → `git commit -m "add testcase guide"`
 
 ---
 

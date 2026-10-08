@@ -14,3 +14,7 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+# Scratch (bai-tap-02)
+/output.jsonl
+/extracted.pcap
+.verify/
