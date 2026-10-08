@@ -6,53 +6,9 @@ from scapy.all import sniff
 from parse_network import parse_network
 from parse_transport import parse_transport
 from parse_application import parse_application
-
-# =============================================================================
-# Bai tap 2 - 3 section trên event
-# Parser (Bai tap 1) sinh 4 lớp; decoder / preprocessor / flow_tracker sẽ điền
-# giá trị vào 3 section dưới đây. Thiếu dữ liệu → null (field) / [] (list).
-# =============================================================================
-DECODER_SECTION_SCHEMA = {
-    "uri_decoded": None,
-    "text_decoded": None,
-    "body_decoded": None,
-    "decode_method": None,     # percent | html_entity | base64 | quoted_printable | none
-    "decode_status": None,     # ok | partial | error | not_applicable
-    "decode_reason": None,
-}
-
-PREPROCESS_SECTION_SCHEMA = {
-    "preprocess_status": None,     # valid | partial | invalid
-    "processing_action": None,     # continue | skip
-    "reason": None,
-    "normalized": {
-        "protocol": None,
-        "src_ip": None,
-        "dst_ip": None,
-        "host": None,
-        "path": None,
-        "header_names": [],        # list → thiếu dữ liệu dùng [] (yêu cầu §4)
-        "timestamp": None,
-    },
-}
-
-FLOW_SECTION_SCHEMA = {
-    "flow_id": None,
-    "direction": None,   # forward | backward
-    "state": None,       # NEW | HANDSHAKE | ESTABLISHED | CLOSING | CLOSED | RESET
-}
-
-
-def new_sections():
-    """3 section Bài tập 2 — copy cho từng event, không share nested dict."""
-    return {
-        "decoder": dict(DECODER_SECTION_SCHEMA),
-        "preprocess": {
-            **PREPROCESS_SECTION_SCHEMA,
-            "normalized": dict(PREPROCESS_SECTION_SCHEMA["normalized"]),
-        },
-        "flow": dict(FLOW_SECTION_SCHEMA),
-    }
+from decoder import new_section as new_decoder_section
+from preprocessor import new_section as new_preprocess_section
+from flow_tracker import new_section as new_flow_section
 
 
 def process_packet(packet, timestamp):
@@ -61,7 +17,10 @@ def process_packet(packet, timestamp):
         "network": parse_network(packet),
         "transport": parse_transport(packet),
         "application": parse_application(packet),
-        **new_sections(),
+        # 3 section Bài tập 2 — module điền giá trị, thiếu dữ liệu → null/[]
+        "decoder": new_decoder_section(),
+        "preprocess": new_preprocess_section(),
+        "flow": new_flow_section(),
     }
 
     # Chuỗi stage Bài tập 2 — mở rộng từng module khi hoàn thành:
