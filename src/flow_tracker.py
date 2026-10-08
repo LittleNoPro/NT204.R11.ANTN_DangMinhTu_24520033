@@ -1,4 +1,4 @@
-"""Module Flow/Connection Tracker — Bài tập 2 §5 (module trọng tâm).
+"""Module Flow/Connection Tracker.
 
 Gom các packet cùng phiên giao tiếp thành flow hai chiều:
 - 5-tuple (src_ip, dst_ip, src_port, dst_port, protocol); hai chiều A→B và B→A

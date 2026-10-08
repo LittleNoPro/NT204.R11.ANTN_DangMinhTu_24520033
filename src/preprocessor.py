@@ -1,4 +1,4 @@
-"""Module Preprocessor — Bài tập 2 §4.
+"""Module Preprocessor.
 
 Kiểm tra và chuẩn hóa dữ liệu để module IDS phía sau nhận biểu diễn nhất quán:
 - Validation: field bắt buộc, port/range hợp lệ, timestamp, protocol
@@ -19,7 +19,7 @@ PREPROCESS_SECTION_SCHEMA = {
         "dst_ip": None,
         "host": None,
         "path": None,
-        "header_names": [],        # list → thiếu dữ liệu dùng [] (§4)
+        "header_names": [],        # list → thiếu dữ liệu dùng []
         "timestamp": None,
     },
 }

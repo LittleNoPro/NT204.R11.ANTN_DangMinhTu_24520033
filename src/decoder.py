@@ -1,4 +1,4 @@
-"""Module Decoder — Bài tập 2 §3.
+"""Module Decoder.
 
 Chuyển dữ liệu mã hóa/biểu diễn sang dạng phân tích được nhưng không đổi ý
 nghĩa logic của dữ liệu:

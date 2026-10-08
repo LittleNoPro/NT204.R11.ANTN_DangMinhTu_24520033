@@ -2,20 +2,20 @@
 
 Hệ thống IDS/IPS đơn giản: bắt packet (live interface hoặc file PCAP) → parse →
 decode → chuẩn hóa → gán flow/connection → ghi JSON Lines. Output là input của
-các module Feature Extractor / Detection Engine ở bài tập sau.
+các module Feature Extractor / Detection Engine phía sau pipeline.
 
 **Pipeline:**
 
 ```
-Packet Capture & Parser (Bài tập 1)
+Packet Capture & Parser
         ↓  event (JSON object)
-Decoder → Preprocessor → Flow/Connection Tracker (Bài tập 2)
+Decoder → Preprocessor → Flow/Connection Tracker
         ↓
 events.jsonl (mỗi packet 1 dòng)  +  flows.jsonl (mỗi flow đóng 1 dòng)
 ```
 
 Mỗi mắt xích là một module riêng trong `src/`; `main.py` chỉ capture, gọi parse
-và ghép các module lại với nhau. Chi tiết làm từng bước: [`GUIDE.md`](GUIDE.md).
+và ghép các module lại với nhau.
 
 ### Tools and Libraries Used
 - `Python`: for building the logic and handling the CLI.
@@ -26,12 +26,12 @@ và ghép các module lại với nhau. Chi tiết làm từng bước: [`GUIDE.
 ```
 src/
   main.py               # CLI + capture + ghép pipeline (7 section/event)
-  parse_network.py      # BT01 – Network Parser: IPv4/IPv6
-  parse_transport.py    # BT01 – Transport Parser: TCP/UDP/ICMP
-  parse_application.py  # BT01 – Application Parser: HTTP/DNS/SMTP
-  decoder.py            # BT02 §3 – percent/HTML entity/Base64/Quoted-Printable
-  preprocessor.py       # BT02 §4 – validation + normalization
-  flow_tracker.py       # BT02 §5 – 5-tuple flow, TCP state, idle timeout, stats
+  parse_network.py      # Network Parser: IPv4/IPv6
+  parse_transport.py    # Transport Parser: TCP/UDP/ICMP
+  parse_application.py  # Application Parser: HTTP/DNS/SMTP
+  decoder.py            # percent/HTML entity/Base64/Quoted-Printable decoding
+  preprocessor.py       # validation + normalization
+  flow_tracker.py       # 5-tuple flow, TCP state, idle timeout, stats
 tests/                  # pytest – 1 file/testcase (T01–T14)
 TEST/                   # kết quả mỗi testcase: input.pcap, output.jsonl, report.md
 ```
@@ -74,15 +74,15 @@ File `--pretty` vẫn là JSON hợp lệ (nhiều document nối nhau): đọc 
 
 ### Ý nghĩa 7 section của event
 
-| Section | Nguồn | Nội dung |
+| Section | Module | Nội dung |
 |---|---|---|
-| `timestamp`, `packet_id` | BT01 | thời điểm packet + thứ tự |
-| `network` | BT01 | IPv4/IPv6: `src_ip`, `dst_ip`, `ttl`, `ip_length` (dùng tính `byte_count` của flow) |
-| `transport` | BT01 | TCP/UDP/ICMP: port, `flags` (TCP state), `payload_length`, `payload_b64` (bytes gốc để decode) |
-| `application` | BT01 | HTTP/DNS/SMTP đã parse (path, body, DNS answers, SMTP command...) |
-| `decoder` | BT02 | kết quả decode: `uri_decoded`, `text_decoded`, `body_decoded`, `decode_method`, `decode_status` (`ok/partial/error/not_applicable`), `decode_reason` |
-| `preprocess` | BT02 | `preprocess_status` (`valid/partial/invalid`), `processing_action` (`continue/skip`), `reason`, `normalized` (protocol/IP/host/path/header/timestamp đã chuẩn hóa) |
-| `flow` | BT02 | `flow_id`, `direction` (`forward/backward`), `state` (TCP: `HANDSHAKE → ESTABLISHED → CLOSING → CLOSED/RESET`) |
+| `timestamp`, `packet_id` | `main.py` | thời điểm packet + thứ tự |
+| `network` | `parse_network.py` | IPv4/IPv6: `src_ip`, `dst_ip`, `ttl`, `ip_length` (dùng tính `byte_count` của flow) |
+| `transport` | `parse_transport.py` | TCP/UDP/ICMP: port, `flags` (TCP state), `payload_length`, `payload_b64` (bytes gốc để decode) |
+| `application` | `parse_application.py` | HTTP/DNS/SMTP đã parse (path, body, DNS answers, SMTP command...) |
+| `decoder` | `decoder.py` | kết quả decode: `uri_decoded`, `text_decoded`, `body_decoded`, `decode_method`, `decode_status` (`ok/partial/error/not_applicable`), `decode_reason` |
+| `preprocess` | `preprocessor.py` | `preprocess_status` (`valid/partial/invalid`), `processing_action` (`continue/skip`), `reason`, `normalized` (protocol/IP/host/path/header/timestamp đã chuẩn hóa) |
+| `flow` | `flow_tracker.py` | `flow_id`, `direction` (`forward/backward`), `state` (TCP: `HANDSHAKE → ESTABLISHED → CLOSING → CLOSED/RESET`) |
 
 3 section cuối do `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`
 định nghĩa schema và điền giá trị; thiếu dữ liệu thì để `null` (field) hoặc `[]`
@@ -99,11 +99,11 @@ Mỗi testcase để lại kết quả trong `TEST/T0x_<Tên>/`:
 - `report.md` – cách chạy, input là gì, output là gì, bảng assert
 - `flows.jsonl` – riêng testcase flow (T07–T13)
 
-Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit (xem `GUIDE.md`).
+Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
 
 ### AI Help
 
 | Model | Mục đích | Phần mã dùng AI |
 |---|---|---|
-| `Big Pickle (OpenCode)` | Hỗ trợ Bài tập 1 | `src/parse_application.py`; `test.py` (script lọc packet phục vụ kiểm thử) |
-| `9router/cl/cline-free/mimo-v2.6-flash:high` (omp coding assistant) | Thiết kế pipeline Bài tập 2 (Decoder → Preprocessor → Flow Tracker), scaffold schema, viết `GUIDE.md` | `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`; phần ghép pipeline và field mới (`ip_length`, `payload_b64`, `smtp_body`) trong `src/main.py`, `src/parse_*.py`; `GUIDE.md` |
+| `Big Pickle (OpenCode)` | Hỗ trợ xây dựng parser HTTP/DNS/SMTP | `src/parse_application.py`; `test.py` (script lọc packet phục vụ kiểm thử) |
+| `9router/cl/cline-free/mimo-v2.6-flash:high` (omp coding assistant) | Thiết kế pipeline Decoder → Preprocessor → Flow Tracker, scaffold schema section | `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`; phần ghép pipeline và field mới (`ip_length`, `payload_b64`, `smtp_body`) trong `src/main.py`, `src/parse_*.py` |

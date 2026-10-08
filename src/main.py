@@ -17,13 +17,13 @@ def process_packet(packet, timestamp):
         "network": parse_network(packet),
         "transport": parse_transport(packet),
         "application": parse_application(packet),
-        # 3 section Bài tập 2 — module điền giá trị, thiếu dữ liệu → null/[]
+        # 3 section trung gian — module điền giá trị, thiếu dữ liệu → null/[]
         "decoder": new_decoder_section(),
         "preprocess": new_preprocess_section(),
         "flow": new_flow_section(),
     }
 
-    # Chuỗi stage Bài tập 2 — mở rộng từng module khi hoàn thành:
+    # Chuỗi xử lý — mở rộng từng module khi hoàn thành:
     #   event = decoder.apply(event)
     #   event = preprocessor.apply(event)
     #   event = flow_tracker.track(event)
