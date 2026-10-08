@@ -7,6 +7,7 @@ def parse_network(packet):
         "dst_ip": None,
         "ttl": None,
         "hop_limit": None,
+        "ip_length": None,
     }
 
     try:
@@ -18,6 +19,7 @@ def parse_network(packet):
                 "src_ip": ip.src,
                 "dst_ip": ip.dst,
                 "ttl": ip.ttl,
+                "ip_length": ip.len,
             }
 
         if IPv6 in packet:
@@ -28,6 +30,7 @@ def parse_network(packet):
                 "src_ip": ipv6.src,
                 "dst_ip": ipv6.dst,
                 "hop_limit": ipv6.hlim,
+                "ip_length": ipv6.plen,
             }
 
         return {

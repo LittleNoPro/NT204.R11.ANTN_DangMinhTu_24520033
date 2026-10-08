@@ -42,6 +42,7 @@ def parse_application(packet):
         "smtp_argument": None,
         "smtp_status": None,
         "smtp_message": None,
+        "smtp_body": None,
         # error
         "parse_error": None,
     }
@@ -200,7 +201,8 @@ def parse_application(packet):
             tcp = packet[TCP]
             if tcp.sport in SMTP_PORTS or tcp.dport in SMTP_PORTS:
                 if Raw in packet:
-                    line = bytes(packet[Raw].load).split(b"\r\n", 1)[0]
+                    payload = bytes(packet[Raw].load)
+                    line = payload.split(b"\r\n", 1)[0]
                     line_str = line.decode("utf-8", errors="ignore")
 
                     # SMTP response: "250 mail.webertest.net" hoac "220-..."
@@ -230,9 +232,21 @@ def parse_application(packet):
                             "smtp_argument": argument if argument else None,
                         }
 
+                    # SMTP data (thông điệp MIME gửi sau DATA): headers + body đa dòng.
+                    # Body là phần sau dòng trống đầu tiên; không có thì lấy phần
+                    # sau dòng đầu tiên (payload có thể chứa body cả mấy dòng).
+                    body = None
+                    if b"\r\n\r\n" in payload:
+                        body = payload.split(b"\r\n\r\n", 1)[1]
+                    elif b"\n\n" in payload:
+                        body = payload.split(b"\n\n", 1)[1]
+                    elif b"\r\n" in payload:
+                        body = payload.split(b"\r\n", 1)[1]
+
                     return {
                         **schema,
                         "protocol": "SMTP", "type": "UNKNOWN",
+                        "smtp_body": body.decode("utf-8", errors="ignore") if body else None,
                     }
 
                 return {

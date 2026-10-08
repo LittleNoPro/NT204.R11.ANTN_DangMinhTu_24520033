@@ -1,4 +1,5 @@
 from scapy.all import TCP, UDP, ICMP, Raw
+import base64
 
 def parse_transport(packet):
     schema = {
@@ -13,6 +14,7 @@ def parse_transport(packet):
         "code": None,
         "payload_length": None,
         "payload": None,
+        "payload_b64": None,
     }
 
     try:
@@ -30,6 +32,7 @@ def parse_transport(packet):
                 "ack": tcp.ack,
                 "payload_length": len(payload),
                 "payload": payload.decode("utf-8", errors="ignore") if payload else None,
+                "payload_b64": base64.b64encode(payload).decode("ascii") if payload else None,
             }
 
         if UDP in packet:
@@ -44,6 +47,7 @@ def parse_transport(packet):
                 "length": udp.len,
                 "payload_length": len(payload),
                 "payload": payload.decode("utf-8", errors="ignore") if payload else None,
+                "payload_b64": base64.b64encode(payload).decode("ascii") if payload else None,
             }
 
         if ICMP in packet:
