@@ -6,10 +6,9 @@ from scapy.all import sniff
 from parse_network import parse_network
 from parse_transport import parse_transport
 from parse_application import parse_application
-from decoder import new_section as new_decoder_section
-from preprocessor import new_section as new_preprocess_section
-from flow_tracker import new_section as new_flow_section
-
+import decoder
+import preprocessor
+import flow_tracker
 
 def process_packet(packet, timestamp):
     event = {
@@ -17,16 +16,12 @@ def process_packet(packet, timestamp):
         "network": parse_network(packet),
         "transport": parse_transport(packet),
         "application": parse_application(packet),
-        # 3 section trung gian — module điền giá trị, thiếu dữ liệu → null/[]
-        "decoder": new_decoder_section(),
-        "preprocess": new_preprocess_section(),
-        "flow": new_flow_section(),
+        "decoder": decoder.new_section(),
+        "preprocess": preprocessor.new_section(),
+        "flow": flow_tracker.new_section(),
     }
 
-    # Chuỗi xử lý — mở rộng từng module khi hoàn thành:
-    #   event = decoder.apply(event)
-    #   event = preprocessor.apply(event)
-    #   event = flow_tracker.track(event)
+    event = decoder.apply(event)
     return event
 
 
@@ -73,3 +68,4 @@ if __name__ == "__main__":
     with open(args.output, "w", encoding="utf-8") as outfile:
         capture(args.count, outfile, args.pretty,
                 interface=args.interface, filename=args.pcap)
+

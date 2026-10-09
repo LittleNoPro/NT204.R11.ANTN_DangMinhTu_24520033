@@ -32,8 +32,7 @@ src/
   decoder.py            # percent/HTML entity/Base64/Quoted-Printable decoding
   preprocessor.py       # validation + normalization
   flow_tracker.py       # 5-tuple flow, TCP state, idle timeout, stats
-tests/                  # pytest – 1 file/testcase (T01–T14)
-TEST/                   # kết quả mỗi testcase: input.pcap, output.jsonl, report.md
+TEST/                   # kết quả mỗi testcase (Bai-tap-01/, Bai-tap-02/): gen_input.py, input.pcap, output.jsonl, report.md
 ```
 
 ### Usage
@@ -88,16 +87,21 @@ File `--pretty` vẫn là JSON hợp lệ (nhiều document nối nhau): đọc 
 định nghĩa schema và điền giá trị; thiếu dữ liệu thì để `null` (field) hoặc `[]`
 (list) cho nhất quán.
 
-### Tests
+### Testcases
+
+Mỗi testcase là 1 folder trong `TEST/Bai-tap-02/` — tái hiện được bằng 2 lệnh:
+
 ```bash
-.venv/bin/python -m pytest tests/ -q                              # toàn bộ
-.venv/bin/python -m pytest tests/test_t01_url_decode.py -q        # 1 testcase
+.venv/bin/python TEST/Bai-tap-02/T0x_<Tên>/gen_input.py   # sinh input.pcap
+.venv/bin/python src/main.py --pcap TEST/Bai-tap-02/T0x_<Tên>/input.pcap \
+    --count 20 --output TEST/Bai-tap-02/T0x_<Tên>/output.jsonl
 ```
-Mỗi testcase để lại kết quả trong `TEST/T0x_<Tên>/`:
-- `input.pcap` – input tái tạo được (test tự sinh, timestamp cố định)
-- `output.jsonl` – output thực tế khi chạy `main.py` trên input đó
-- `report.md` – cách chạy, input là gì, output là gì, bảng assert
-- `flows.jsonl` – riêng testcase flow (T07–T13)
+
+Nội dung mỗi folder:
+- `gen_input.py` – script sinh `input.pcap` (frame mô tả đúng case cần test)
+- `input.pcap` – input tái tạo được, timestamp cố định
+- `output.jsonl` – output thực tế của `main.py` trên input đó
+- `report.md` – cách chạy, input là gì, bảng kết quả mong đợi
 
 Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
 

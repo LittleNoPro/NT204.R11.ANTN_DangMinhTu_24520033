@@ -11,6 +11,9 @@ Mọi lỗi decode nằm trong decode_status/decode_reason — không raise ra n
 pipeline (một packet lỗi không được làm dừng chương trình).
 """
 
+import base64, binascii, html, quopri   
+from urllib.parse import unquote, unquote_plus
+
 DECODER_SECTION_SCHEMA = {
     "uri_decoded": None,       # URI sau percent-decode (T01)
     "text_decoded": None,      # text sau HTML entity decode (T02)
@@ -22,5 +25,34 @@ DECODER_SECTION_SCHEMA = {
 
 
 def new_section():
-    """Section decoder rỗng cho mỗi event — copy mới, không share reference."""
     return dict(DECODER_SECTION_SCHEMA)
+
+
+def _percent_decode(uri): 
+    path, sep, query = uri.partition('?')
+    decoded = unquote(path)
+    if sep: 
+        decoded += '?' + unquote_plus(query)  
+    return decoded
+
+
+def apply(event):
+    section = event['decoder']
+    section["decode_status"] = "not_applicable"
+
+    try:
+        # T01: percent decode — application.path giữ nguyên raw
+        path = (event.get("application") or {}).get("path")
+        if path:
+            _, _, query = path.partition("?")
+            # percent-encoding anywhere, hoặc '+' trong query (x-www-form-urlencoded)
+            if "%" in path or "+" in query:
+                section["uri_decoded"] = _percent_decode(path)
+                section["decode_method"] = "percent"
+                section["decode_status"] = "ok"
+    except Exception as error:
+        section["decode_status"] = "error"
+        section["decode_reason"] = str(error)
+
+    return event
+
