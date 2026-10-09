@@ -40,6 +40,7 @@ TEST/                   # kết quả mỗi testcase (Bai-tap-01/, Bai-tap-02/):
 python src/main.py --pcap test.pcap --count 10 --output out.jsonl
 sudo python src/main.py --interface wlan0 --count 20
 python src/main.py --pcap test.pcap --count 10 --output out.jsonl --pretty
+python src/main.py --pcap test.pcap --output out.jsonl --flows flows.jsonl
 ```
 
 | Flag | Ý nghĩa |
@@ -49,6 +50,9 @@ python src/main.py --pcap test.pcap --count 10 --output out.jsonl --pretty
 | `--count N` | số packet tối đa, mặc định 10 |
 | `--output FILE` | file kết quả, mặc định `output.jsonl` |
 | `--pretty` | JSON thụt lề 2 spaces, dễ đọc hơn |
+| `--flows FILE` | ghi flow đã đóng vào file jsonl (vd `flows.jsonl`) |
+| `--tcp-timeout N` | idle timeout TCP (giây), mặc định 300 |
+| `--udp-timeout N` | idle timeout UDP (giây), mặc định 60 |
 
 ### Output Format
 Compact (mặc định, 1 packet = 1 dòng — dùng để máy đọc / jq):
@@ -101,6 +105,7 @@ Nội dung mỗi folder:
 - `gen_input.py` – script sinh `input.pcap` (frame mô tả đúng case cần test)
 - `input.pcap` – input tái tạo được, timestamp cố định
 - `output.jsonl` – output thực tế của `main.py` trên input đó
+- `flows.jsonl` – flow record đã đóng (testcase flow T07–T13, chạy với `--flows`)
 - `report.md` – cách chạy, input là gì, bảng kết quả mong đợi
 
 Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
