@@ -36,11 +36,52 @@ def _percent_decode(uri):
     return decoded
 
 
+def _decode_mime_body(payload_bytes):
+    """Tách headers/body MIME, decode theo header Content-Transfer-Encoding.
+
+    Trả về (body_text, method):
+    - (None, None)              không thấy CTE hoặc CTE không hỗ trợ
+    - (text, method)            decode thành công UTF-8
+    - (None, thông_lỗi)         base64 rác hoặc body không phải UTF-8
+    """
+    header_bytes, sep, body_bytes = payload_bytes.partition(b"\r\n\r\n")
+    if not sep:
+        header_bytes, sep, body_bytes = payload_bytes.partition(b"\n\n")
+    if not sep:
+        return None, None
+
+    cte = None
+    for line in header_bytes.decode("ascii", errors="replace").splitlines():
+        name, colon, value = line.partition(":")
+        if colon and name.strip().lower() == "content-transfer-encoding":
+            cte = value.strip().lower()
+            break
+    if cte is None:
+        return None, None
+
+    if cte == "base64":
+        # body MIME chuẩn được wrap 76 ký tự/dòng → bỏ whitespace trước khi decode
+        raw = base64.b64decode(body_bytes.translate(None, b"\r\n\t "), validate=True)
+        method = "base64"
+    elif cte == "quoted-printable":
+        raw = quopri.decodestring(body_bytes)
+        method = "quoted_printable"
+    else:
+        return None, None
+
+    try:
+        return raw.decode("utf-8"), method
+    except UnicodeDecodeError as error:
+        return None, str(error)
+
+
 def apply(event):
     section = event['decoder']
     section["decode_status"] = "not_applicable"
 
     try:
+        transport = event.get("transport") or {}
+
         # T01: percent decode — application.path giữ nguyên raw
         path = (event.get("application") or {}).get("path")
         if path:
@@ -58,6 +99,23 @@ def apply(event):
             if section["decode_status"] != "ok":     # percent đã set thì không ghi đè
                 section["decode_method"] = "html_entity"
                 section["decode_status"] = "ok"
+
+        # T03: SMTP/MIME — Base64/Quoted-Printable theo header CTE
+        if ((event.get("application") or {}).get("protocol") == "SMTP"
+                and transport.get("payload_b64")):
+            try:
+                payload_bytes = base64.b64decode(transport["payload_b64"])
+                decoded, method = _decode_mime_body(payload_bytes)
+                if decoded is not None:
+                    section["body_decoded"] = decoded
+                    section["decode_method"] = method
+                    section["decode_status"] = "ok"
+                elif method:          # lỗi UTF-8, chi tiết nằm trong method
+                    section["decode_status"] = "partial"
+                    section["decode_reason"] = method
+            except (binascii.Error, UnicodeDecodeError) as error:
+                section["decode_status"] = "error"
+                section["decode_reason"] = f"mime decode failed: {error}"
     except Exception as error: 
         section["decode_status"] = "error"
         section["decode_reason"] = str(error)
