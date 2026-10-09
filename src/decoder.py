@@ -116,6 +116,14 @@ def apply(event):
             except (binascii.Error, UnicodeDecodeError) as error:
                 section["decode_status"] = "error"
                 section["decode_reason"] = f"mime decode failed: {error}"
+
+        # T04: payload không phải UTF-8 hợp lệ → partial, chương trình chạy tiếp
+        if section["decode_status"] == "not_applicable" and transport.get("payload_b64"):
+            try:
+                base64.b64decode(transport["payload_b64"], validate=True).decode("utf-8")
+            except UnicodeDecodeError as error:
+                section["decode_status"] = "partial"
+                section["decode_reason"] = f"invalid utf-8: {error}"
     except Exception as error: 
         section["decode_status"] = "error"
         section["decode_reason"] = str(error)
