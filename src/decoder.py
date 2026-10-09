@@ -50,7 +50,15 @@ def apply(event):
                 section["uri_decoded"] = _percent_decode(path)
                 section["decode_method"] = "percent"
                 section["decode_status"] = "ok"
-    except Exception as error:
+
+        # T02: HTML entity trên body text — chỉ decode entity, tag thật giữ nguyên
+        body = (event.get("application") or {}).get("body")
+        if body and html.unescape(body) != body:
+            section["text_decoded"] = html.unescape(body)
+            if section["decode_status"] != "ok":     # percent đã set thì không ghi đè
+                section["decode_method"] = "html_entity"
+                section["decode_status"] = "ok"
+    except Exception as error: 
         section["decode_status"] = "error"
         section["decode_reason"] = str(error)
 
