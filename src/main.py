@@ -22,6 +22,7 @@ def process_packet(packet, timestamp):
     }
 
     event = decoder.apply(event)
+    event = preprocessor.apply(event)
     return event
 
 
