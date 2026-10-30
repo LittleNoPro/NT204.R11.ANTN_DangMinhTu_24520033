@@ -1,0 +1,3 @@
+{"packet_id": 1, "skipped": false, "candidates": [3050001, 3050002], "results": [{"sid": 3050001, "result": "MATCH", "stage": null, "reason": null}, {"sid": 3050002, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 2, "skipped": false, "candidates": [3050002, 3050003], "results": [{"sid": 3050002, "result": "MATCH", "stage": null, "reason": null}, {"sid": 3050003, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 3, "skipped": false, "candidates": [3050001, 3050002], "results": [{"sid": 3050001, "result": "NO_MATCH", "stage": "header", "reason": "address/port mismatch"}, {"sid": 3050002, "result": "NO_MATCH", "stage": "header", "reason": "address/port mismatch"}]}

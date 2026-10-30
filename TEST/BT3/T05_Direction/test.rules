@@ -1,0 +1,4 @@
+# T05 — direction "->" chỉ khớp đúng chiều, "<>" khớp cả hai chiều
+alert tcp 10.0.0.1 any -> 10.0.0.2 80 (msg:"T05 one-way client->server"; content:"HELLO"; sid:3050001; rev:1;)
+alert tcp 10.0.0.1 any <> 10.0.0.2 80 (msg:"T05 bidirectional"; content:"HELLO"; sid:3050002; rev:1;)
+alert tcp 10.0.0.2 80 -> 10.0.0.1 any (msg:"T05 one-way server->client"; content:"HELLO"; sid:3050003; rev:1;)
