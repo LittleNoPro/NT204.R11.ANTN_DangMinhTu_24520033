@@ -1,0 +1,2 @@
+[rules] {'valid': 2}
+[engine] {'rules_loaded': 2, 'events_evaluated': 4, 'candidate_rules': 8, 'matches': 4, 'rejected_content': 4}

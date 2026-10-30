@@ -1,0 +1,4 @@
+{"packet_id": 1, "skipped": false, "candidates": [3110001, 3110002], "results": [{"sid": 3110001, "result": "MATCH", "stage": null, "reason": null}, {"sid": 3110002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 2, "skipped": false, "candidates": [3110001, 3110002], "results": [{"sid": 3110001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 3110002, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 3, "skipped": false, "candidates": [3110001, 3110002], "results": [{"sid": 3110001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 3110002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 4, "skipped": false, "candidates": [3110001, 3110002], "results": [{"sid": 3110001, "result": "MATCH", "stage": null, "reason": null}, {"sid": 3110002, "result": "MATCH", "stage": null, "reason": null}]}

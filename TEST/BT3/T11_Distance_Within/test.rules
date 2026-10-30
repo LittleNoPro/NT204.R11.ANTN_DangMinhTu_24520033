@@ -1,0 +1,3 @@
+# T11 — relative matching: content thứ 2 tính từ cuối match của content thứ 1
+alert tcp any any -> any 80 (msg:"T11 admin trong 10 byte sau user="; content:"user="; content:"admin"; distance:0; within:10; sid:3110001; rev:1;)
+alert tcp any any -> any 80 (msg:"T11 admin cách user= ít nhất 6 byte"; content:"user="; content:"admin"; distance:6; sid:3110002; rev:1;)
