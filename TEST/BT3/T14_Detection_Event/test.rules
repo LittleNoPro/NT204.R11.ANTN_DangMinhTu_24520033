@@ -1,0 +1,2 @@
+# T14 — Detection Event: sid/rev/msg/priority/classtype + 5-tuple + protocol + flow + match info
+alert tcp any any -> 192.168.1.0/24 $HTTP_PORTS (msg:"Directory traversal detected"; flow:to_server,established; content:"../"; classtype:web-application-attack; priority:1; sid:100001; rev:1;)

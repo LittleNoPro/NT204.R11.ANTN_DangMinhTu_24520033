@@ -1,0 +1,4 @@
+{"packet_id": 1, "skipped": false, "candidates": [100001], "results": [{"sid": 100001, "result": "NO_MATCH", "stage": "flow", "reason": "flow not established (state=HANDSHAKE)"}]}
+{"packet_id": 2, "skipped": false, "candidates": [], "results": []}
+{"packet_id": 3, "skipped": false, "candidates": [100001], "results": [{"sid": 100001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 4, "skipped": false, "candidates": [100001], "results": [{"sid": 100001, "result": "MATCH", "stage": null, "reason": null}]}
