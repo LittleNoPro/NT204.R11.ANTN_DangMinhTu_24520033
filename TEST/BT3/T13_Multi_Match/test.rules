@@ -1,0 +1,6 @@
+# T13 — nhiều rule cùng match 1 event → sinh đủ Detection Event, không dừng ở rule đầu
+alert tcp any any -> any 80 (msg:"T13 directory traversal"; content:"../"; classtype:web-application-attack; priority:1; sid:3130001; rev:1;)
+alert tcp any any -> any 80 (msg:"T13 /etc/passwd"; content:"/etc/passwd"; classtype:attempted-recon; priority:2; sid:3130002; rev:1;)
+alert tcp any any -> any 80 (msg:"T13 XSS script tag"; content:"<script"; nocase; classtype:web-application-attack; priority:2; sid:3130003; rev:1;)
+alert tcp any any -> any 80 (msg:"T13 HTTP GET method"; content:"GET"; depth:3; priority:4; sid:3130004; rev:1;)
+alert tcp any any -> any 80 (msg:"T13 không khớp (đối chứng)"; content:"wp-login"; sid:3130005; rev:1;)
