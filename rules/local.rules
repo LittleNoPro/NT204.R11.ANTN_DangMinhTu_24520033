@@ -1,0 +1,19 @@
+# Bộ rule mẫu cho Core Engine (cú pháp Snort, phạm vi bài tập 3)
+# Mỗi rule một dòng; dòng bắt đầu bằng '#' là comment.
+
+# --- HTTP ---
+alert tcp any any -> any $HTTP_PORTS (msg:"WEB-ATTACKS directory traversal"; flow:to_server,established; content:"../"; classtype:web-application-attack; priority:1; sid:1000001; rev:1;)
+alert tcp any any -> any $HTTP_PORTS (msg:"WEB-ATTACKS SQL injection OR 1=1"; flow:to_server,established; content:"' OR 1=1"; nocase; classtype:web-application-attack; priority:1; sid:1000002; rev:1;)
+alert tcp any any -> any $HTTP_PORTS (msg:"WEB-ATTACKS XSS script tag"; flow:to_server,established; content:"<script"; nocase; classtype:web-application-attack; priority:2; sid:1000003; rev:1;)
+alert tcp any any -> any $HTTP_PORTS (msg:"WEB-MISC /etc/passwd access"; flow:to_server,established; content:"GET"; depth:3; content:"/etc/passwd"; distance:0; classtype:attempted-recon; priority:2; sid:1000004; rev:1;)
+
+# --- TCP scan / flags ---
+alert tcp any any -> $HOME_NET any (msg:"SCAN SYN with payload"; flags:S; dsize:>0; classtype:attempted-recon; priority:2; sid:1000010; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"SCAN NULL scan"; flags:0; classtype:attempted-recon; priority:2; sid:1000011; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"SCAN XMAS scan"; flags:FPU; classtype:attempted-recon; priority:2; sid:1000012; rev:1;)
+
+# --- DNS ---
+alert udp any any -> any 53 (msg:"DNS query for suspicious .xyz domain"; flow:to_server; content:"|03|xyz|00|"; nocase; classtype:bad-unknown; priority:3; sid:1000020; rev:1;)
+
+# --- SMTP ---
+alert tcp any any -> any 25 (msg:"SMTP EXPN command"; flow:to_server,established; content:"EXPN"; nocase; depth:4; classtype:attempted-recon; priority:2; sid:1000030; rev:1;)

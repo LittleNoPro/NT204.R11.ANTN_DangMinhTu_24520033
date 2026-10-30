@@ -1,0 +1,11 @@
+{
+  "rule_files": [
+    {"path": "local.rules", "enabled": true}
+  ],
+  "disabled_sids": [],
+  "variables": {
+    "HOME_NET": "any",
+    "EXTERNAL_NET": "any",
+    "HTTP_PORTS": "[80,8000,8080,8888]"
+  }
+}
