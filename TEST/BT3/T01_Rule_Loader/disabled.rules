@@ -1,0 +1,2 @@
+# file này bị tắt trong config.json ("enabled": false) → không rule nào được nạp
+alert tcp any any -> any 21 (msg:"T01 file disabled"; sid:3010010; rev:1;)

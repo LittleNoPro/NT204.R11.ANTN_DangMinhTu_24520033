@@ -1,0 +1,8 @@
+{
+  "rule_files": [
+    {"path": "test.rules", "enabled": true},
+    {"path": "disabled.rules", "enabled": false},
+    {"path": "missing.rules", "enabled": true}
+  ],
+  "disabled_sids": [3010004]
+}

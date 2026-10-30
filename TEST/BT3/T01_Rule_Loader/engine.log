@@ -1,0 +1,4 @@
+[rules] warning: TEST/BT3/T01_Rule_Loader/disabled.rules: file disabled by config
+[rules] warning: TEST/BT3/T01_Rule_Loader/missing.rules: cannot read rule file ([Errno 2] No such file or directory: 'TEST/BT3/T01_Rule_Loader/missing.rules')
+[rules] warning: TEST/BT3/T01_Rule_Loader/test.rules:13: disabled rule (sid=3010004): sid disabled by config
+[rules] {'valid': 3, 'disabled': 1}
