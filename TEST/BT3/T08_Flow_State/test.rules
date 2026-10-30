@@ -1,0 +1,5 @@
+# T08 — flow keyword dùng trạng thái từ Flow Tracker
+alert tcp any any -> any 80 (msg:"T08 GET to_server established"; flow:to_server,established; content:"GET"; sid:3080001; rev:1;)
+alert tcp any 80 -> any any (msg:"T08 response to_client established"; flow:to_client,established; content:"HTTP/1.1 200"; sid:3080002; rev:1;)
+alert tcp any any -> any 80 (msg:"T08 GET khi chưa established"; flow:to_server,not_established; content:"GET"; sid:3080003; rev:1;)
+alert tcp any 80 -> any any (msg:"T08 response nhưng đòi to_server (không bao giờ khớp)"; flow:to_server; content:"HTTP/1.1"; sid:3080004; rev:1;)
