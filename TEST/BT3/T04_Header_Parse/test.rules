@@ -1,0 +1,9 @@
+# T04 — parse header: TCP + any / single IP / CIDR + port single / range / list / phủ định
+alert tcp any any -> any any (msg:"any → any"; sid:3040001;)
+alert tcp 10.0.0.1 any -> 192.168.1.20 80 (msg:"single IP + single port"; sid:3040002;)
+alert tcp 10.0.0.0/8 any -> 192.168.1.0/24 1:1024 (msg:"CIDR + range"; sid:3040003;)
+alert tcp any 1024: -> any :1023 (msg:"range mở 2 đầu"; sid:3040004;)
+alert tcp [10.0.0.1,172.16.0.0/12] any -> any [80,443,8000:8080] (msg:"list IP + list port"; sid:3040005;)
+alert tcp !10.0.0.0/8 any -> any !22 (msg:"phủ định IP/port"; sid:3040006;)
+alert tcp $HOME_NET any -> $EXTERNAL_NET $HTTP_PORTS (msg:"biến Snort"; sid:3040007;)
+alert udp any any <> 8.8.8.8 53 (msg:"udp bidirectional"; sid:3040008;)
