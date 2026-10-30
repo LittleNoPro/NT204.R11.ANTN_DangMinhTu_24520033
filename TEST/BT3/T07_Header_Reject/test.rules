@@ -1,0 +1,7 @@
+# T07 — header không khớp → rule bị loại ở bước header, không chạy content matching
+alert tcp any any -> 192.168.1.20 80 (msg:"T07 dst IP khác"; content:"attack"; sid:3070001; rev:1;)
+alert tcp 172.16.0.0/12 any -> any 80 (msg:"T07 src CIDR khác"; content:"attack"; sid:3070002; rev:1;)
+alert tcp any 1:1024 -> any 80 (msg:"T07 src port ngoài range"; content:"attack"; sid:3070003; rev:1;)
+alert udp any any -> any any (msg:"T07 protocol udp"; content:"attack"; sid:3070004; rev:1;)
+alert tcp any any -> any 8080 (msg:"T07 dst port khác"; content:"attack"; sid:3070005; rev:1;)
+alert tcp any any -> 10.0.0.2 80 (msg:"T07 đối chứng: header khớp"; content:"attack"; sid:3070100; rev:1;)
