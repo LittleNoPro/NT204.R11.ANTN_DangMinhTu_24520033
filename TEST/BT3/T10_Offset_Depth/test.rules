@@ -1,0 +1,4 @@
+# T10 — offset/depth: chỉ match trong vùng chỉ định
+alert tcp any any -> any 80 (msg:"T10 GET trong 3 byte đầu"; content:"GET"; offset:0; depth:3; sid:3100001; rev:1;)
+alert tcp any any -> any 80 (msg:"T10 passwd trong byte 4..23"; content:"passwd"; offset:4; depth:20; sid:3100002; rev:1;)
+alert tcp any any -> any 80 (msg:"T10 secret từ byte 30"; content:"secret"; offset:30; sid:3100003; rev:1;)
