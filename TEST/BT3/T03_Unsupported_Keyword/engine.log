@@ -1,0 +1,11 @@
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:2: unsupported rule (sid=3030001): unsupported keyword(s) pcre
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:3: unsupported rule (sid=3030002): unsupported keyword(s) http_uri, byte_test
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:4: unsupported rule (sid=3030003): unsupported keyword(s) file_data
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:5: unsupported rule (sid=3030004): unsupported action 'drop'
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:6: unsupported rule (sid=3030005): unsupported action 'log'
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:7: unsupported rule (sid=3030006): unsupported protocol 'icmp'
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:8: unsupported rule (sid=3030007): unsupported IPv6 address '2001:db8::1'
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:9: unsupported rule (sid=None): unsupported flow option 'only_stream'
+[rules] warning: TEST/BT3/T03_Unsupported_Keyword/test.rules:10: unsupported rule (sid=None): unsupported negated content
+[rules] {'valid': 1, 'unsupported': 9}
+[engine] {'rules_loaded': 1, 'events_evaluated': 5, 'candidate_rules': 3, 'rejected_content': 2, 'matches': 1}

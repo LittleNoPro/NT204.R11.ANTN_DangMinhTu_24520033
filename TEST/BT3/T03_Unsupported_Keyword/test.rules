@@ -1,0 +1,11 @@
+# T03 — rule đúng cú pháp nhưng ngoài phạm vi → unsupported, không crash
+alert tcp any any -> any 80 (msg:"pcre"; pcre:"/admin/i"; sid:3030001;)
+alert tcp any any -> any 80 (msg:"http_uri + byte_test"; content:"admin"; http_uri; byte_test:4,>,1000,0; sid:3030002;)
+alert tcp any any -> any 80 (msg:"file_data"; file_data; content:"MZ"; sid:3030003;)
+drop tcp any any -> any 80 (msg:"action drop (IPS)"; sid:3030004;)
+log tcp any any -> any 80 (msg:"action log"; sid:3030005;)
+alert icmp any any -> any any (msg:"protocol icmp"; sid:3030006;)
+alert tcp 2001:db8::1 any -> any 80 (msg:"IPv6 address"; sid:3030007;)
+alert tcp any any -> any 80 (msg:"flow only_stream"; flow:only_stream; sid:3030008;)
+alert tcp any any -> any 80 (msg:"negated content"; content:!"GET"; sid:3030009;)
+alert tcp any any -> any 80 (msg:"metadata/reference được bỏ qua"; content:"GET"; reference:url,example.com; metadata:service http; sid:3030100; rev:1;)
