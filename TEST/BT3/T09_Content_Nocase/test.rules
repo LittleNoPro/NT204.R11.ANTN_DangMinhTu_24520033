@@ -1,0 +1,3 @@
+# T09 — content phân biệt hoa thường; thêm nocase thì không phân biệt
+alert tcp any any -> any 80 (msg:"T09 admin case-sensitive"; content:"admin"; sid:3090001; rev:1;)
+alert tcp any any -> any 80 (msg:"T09 admin nocase"; content:"admin"; nocase; sid:3090002; rev:1;)
