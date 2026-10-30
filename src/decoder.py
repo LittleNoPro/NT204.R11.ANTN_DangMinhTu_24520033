@@ -118,7 +118,10 @@ def apply(event):
                 section["decode_reason"] = f"mime decode failed: {error}"
 
         # T04: payload không phải UTF-8 hợp lệ → partial, chương trình chạy tiếp
-        if section["decode_status"] == "not_applicable" and transport.get("payload_b64"):
+        # (DNS là giao thức nhị phân → không kiểm tra UTF-8)
+        if (section["decode_status"] == "not_applicable"
+                and transport.get("payload_b64")
+                and (event.get("application") or {}).get("protocol") != "DNS"):
             try:
                 base64.b64decode(transport["payload_b64"], validate=True).decode("utf-8")
             except UnicodeDecodeError as error:

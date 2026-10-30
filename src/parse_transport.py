@@ -1,5 +1,18 @@
-from scapy.all import TCP, UDP, ICMP, Raw
+from scapy.all import TCP, UDP, ICMP, Padding
 import base64
+
+
+def _payload_bytes(layer):
+    """Bytes payload thật của TCP/UDP.
+
+    Không dùng `Raw in layer` vì Scapy đã tách HTTP/DNS thành layer riêng
+    (không còn Raw) → payload bị mất. Cắt bỏ Padding Ethernet ở cuối frame.
+    """
+    data = bytes(layer.payload)
+    pad = layer.getlayer(Padding)
+    if pad is not None and pad.load:
+        data = data[:len(data) - len(pad.load)]
+    return data
 
 def parse_transport(packet):
     schema = {
@@ -19,7 +32,7 @@ def parse_transport(packet):
     try:
         if TCP in packet:
             tcp = packet[TCP]
-            payload = bytes(tcp.payload) if Raw in tcp else b""
+            payload = _payload_bytes(tcp)
 
             return {
                 **schema,
@@ -35,7 +48,7 @@ def parse_transport(packet):
 
         if UDP in packet:
             udp = packet[UDP]
-            payload = bytes(udp.payload) if Raw in udp else b""
+            payload = _payload_bytes(udp)
 
             return {
                 **schema,
