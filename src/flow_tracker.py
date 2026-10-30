@@ -22,6 +22,7 @@ class FlowTracker:
         self.active = {}
         self.closed = []
         self._counter = itertools.count(1)
+        self.last_flow = None          # flow của packet vừa track (cho context())
 
     def _key(self, net, tr):
         proto = net.get("protocol") == "IPv6" and "IPv6" or net.get("protocol")
@@ -150,6 +151,7 @@ class FlowTracker:
             if app_proto and app_proto != "UNKNOWN":
                 flow["application_protocol"] = app_proto
 
+            self.last_flow = flow
             if closing:
                 self._close(key, flow,
                             "reset" if flow["state"] == "RESET" else "closed")
@@ -161,6 +163,33 @@ class FlowTracker:
             event["flow"] = {"flow_id": None, "direction": None, "state": None}
             event.setdefault("preprocess", {}).setdefault("reason", None)
         return event
+
+    def context(self, event):
+        """Flow context cho Core Engine (BT3) của packet vừa được track.
+
+        - to_server/to_client: theo direction (forward = phía khởi tạo → server)
+        - established: TCP ở ESTABLISHED/CLOSING; UDP khi đã thấy cả hai chiều
+        """
+        info = event.get("flow") or {}
+        flow = self.last_flow
+        if not info.get("flow_id") or flow is None or flow["flow_id"] != info["flow_id"]:
+            return {"flow_id": None, "direction": None, "state": None,
+                    "to_server": False, "to_client": False, "established": False,
+                    "application_protocol": None}
+        if flow["protocol"] == "TCP":
+            established = flow["state"] in ("ESTABLISHED", "CLOSING")
+        else:
+            established = (flow["forward"]["packet_count"] > 0
+                           and flow["backward"]["packet_count"] > 0)
+        return {
+            "flow_id": flow["flow_id"],
+            "direction": info["direction"],
+            "state": flow["state"],
+            "to_server": info["direction"] == "forward",
+            "to_client": info["direction"] == "backward",
+            "established": established,
+            "application_protocol": flow["application_protocol"],
+        }
 
     def flush(self):
         for key in list(self.active):
