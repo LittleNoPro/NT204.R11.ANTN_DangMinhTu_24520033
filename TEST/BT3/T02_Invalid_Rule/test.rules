@@ -1,0 +1,16 @@
+# T02 — rule sai cú pháp: mỗi rule invalid có lý do, engine vẫn nạp rule hợp lệ
+alert tcp any any -> any 80 msg:"thiếu ngoặc"; sid:3020001;
+alert tcp any any any 80 (msg:"header thiếu direction"; sid:3020002;)
+alert tcp any any <- any 80 (msg:"direction sai"; sid:3020003;)
+alert tcp 300.1.1.1 any -> any 80 (msg:"IP sai"; sid:3020004;)
+alert tcp any any -> any 70000 (msg:"port vượt 65535"; sid:3020005;)
+alert tcp any any -> any 100:50 (msg:"port range ngược"; sid:3020006;)
+alert tcp any any -> any 80 (msg:"thiếu sid"; content:"GET";)
+alert tcp any any -> any 80 (msg:"sid không phải số"; sid:abc;)
+alert tcp any any -> any 80 (msg:"nháy chưa đóng; sid:3020009;)
+alert tcp any any -> any 80 (msg:"nocase không có content"; nocase; sid:3020010;)
+alert tcp any any -> any 80 (msg:"depth nhỏ hơn content"; content:"GETX"; depth:2; sid:3020011;)
+alert tcp any any -> any 80 (msg:"flags ký tự lạ"; flags:SZ; sid:3020012;)
+alert udp any any -> any 53 (msg:"flags trên udp"; flags:S; sid:3020013;)
+alert tcp $UNKNOWN_NET any -> any 80 (msg:"biến chưa định nghĩa"; sid:3020015;)
+alert tcp any any -> any 80 (msg:"rule hợp lệ cuối file"; flow:to_server,established; content:"GET"; sid:3020100; rev:1;)

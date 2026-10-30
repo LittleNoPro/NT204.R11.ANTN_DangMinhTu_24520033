@@ -1,0 +1,16 @@
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:2: invalid rule (sid=None): missing '( options )'
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:3: invalid rule (sid=None): header needs 7 fields, got 6
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:4: invalid rule (sid=None): invalid direction '<-'
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:5: invalid rule (sid=None): invalid IP address '300.1.1.1'
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:6: invalid rule (sid=None): invalid port '70000'
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:7: invalid rule (sid=None): invalid port range '100:50'
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:8: invalid rule (sid=None): missing sid
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:9: invalid rule (sid=None): sid must be an integer, got 'abc'
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:10: invalid rule (sid=None): unterminated quoted string in options
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:11: invalid rule (sid=None): nocase without preceding content
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:12: invalid rule (sid=None): depth 2 smaller than content length 4
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:13: invalid rule (sid=None): invalid TCP flag(s) 'Z'
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:14: invalid rule (sid=3020013): flags requires protocol tcp
+[rules] warning: TEST/BT3/T02_Invalid_Rule/test.rules:15: invalid rule (sid=None): undefined variable $UNKNOWN_NET
+[rules] {'valid': 1, 'invalid': 14}
+[engine] {'rules_loaded': 1, 'events_evaluated': 5, 'candidate_rules': 3, 'rejected_flow': 1, 'rejected_content': 1, 'matches': 1}
