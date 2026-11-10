@@ -36,6 +36,17 @@ def new_section():
     return section
 
 
+# Chính sách xử lý, đặt từ CLI qua configure():
+# - skip_unknown: event có application protocol UNKNOWN → skip thay vì continue
+# - max_payload:  payload (byte) lớn hơn ngưỡng → partial + skip (None = không giới hạn)
+CONFIG = {"skip_unknown": False, "max_payload": None}
+
+
+def configure(skip_unknown=False, max_payload=None):
+    CONFIG["skip_unknown"] = bool(skip_unknown)
+    CONFIG["max_payload"] = max_payload
+
+
 KNOWN_PROTOCOLS = {"TCP", "UDP", "ICMP", "HTTP", "DNS", "SMTP", "TLS", "UNKNOWN"}
 HOST_RE = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.?$")
 
@@ -83,6 +94,7 @@ def apply(event):
     app = event.get("application") or {}
     reasons = []
     hard_error = False
+    skip = False                     # bỏ qua theo cấu hình (không phải lỗi)
 
     try:
         # --- validation ---
@@ -113,6 +125,12 @@ def apply(event):
             reasons.append("missing network address")
         if app.get("protocol") == "UNKNOWN":
             reasons.append("application protocol unknown")
+            skip = skip or CONFIG["skip_unknown"]
+        limit = CONFIG["max_payload"]
+        size = transport.get("payload_length") or 0
+        if limit is not None and size > limit:
+            reasons.append(f"payload {size} bytes exceeds max_payload {limit}")
+            skip = True
 
         # --- normalization ---
         norm = section["normalized"]
@@ -133,7 +151,7 @@ def apply(event):
             section["reason"] = "; ".join(reasons)
         elif reasons:
             section["preprocess_status"] = "partial"
-            section["processing_action"] = "continue"
+            section["processing_action"] = "skip" if skip else "continue"
             section["reason"] = "; ".join(reasons)
         else:
             section["preprocess_status"] = "valid"

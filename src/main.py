@@ -86,6 +86,10 @@ if __name__ == "__main__":
                         help="ghi flow đã đóng vào file jsonl")
     parser.add_argument("--tcp-timeout", type=int, default=300)
     parser.add_argument("--udp-timeout", type=int, default=60)
+    parser.add_argument("--skip-unknown", action="store_true",
+                        help="event có application protocol UNKNOWN → processing_action=skip")
+    parser.add_argument("--max-payload", type=int, default=None,
+                        help="payload lớn hơn N byte → partial + skip")
     # --- Core Engine (bài tập 3) ---
     parser.add_argument("--rules", action="append", default=[],
                         help="file .rules (lặp lại được)")
@@ -105,6 +109,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if not (args.interface or args.pcap or args.check_rules):
         parser.error("one of --interface, --pcap, --check-rules is required")
+
+    preprocessor.configure(skip_unknown=args.skip_unknown,
+                           max_payload=args.max_payload)
 
     rule_engine = None
     if args.rules or args.rules_config:
