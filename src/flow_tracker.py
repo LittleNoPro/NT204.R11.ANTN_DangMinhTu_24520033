@@ -27,11 +27,12 @@ class FlowTracker:
     def _key(self, net, tr):
         proto = net.get("protocol") == "IPv6" and "IPv6" or net.get("protocol")
         l4 = tr.get("protocol")
-        ip_a, ip_b = sorted([str(net.get("src_ip") or "?"), str(net.get("dst_ip") or "?")])
-        port_a, port_b = sorted([tr.get("src_port"), tr.get("dst_port")])
-        if l4 in ("TCP", "UDP"):
-            return (proto, l4, ip_a, ip_b, port_a, port_b)
-        return (proto, l4, ip_a, ip_b, None, None)
+        # sắp xếp theo cặp (ip, port) — sắp IP và port riêng rẽ sẽ gộp nhầm
+        # A:1000→B:2000 với A:2000→B:1000 thành một flow
+        src = (str(net.get("src_ip")), tr.get("src_port"))
+        dst = (str(net.get("dst_ip")), tr.get("dst_port"))
+        end_a, end_b = sorted([src, dst])
+        return (proto, l4) + end_a + end_b
 
     def _new_flow(self, event, key):
         net, tr = event["network"], event["transport"]
@@ -113,6 +114,14 @@ class FlowTracker:
 
     def track(self, event):
         net, tr = event.get("network") or {}, event.get("transport") or {}
+        # flow định nghĩa theo 5-tuple → chỉ track TCP/UDP có đủ IP + port;
+        # packet khác (ICMP, non-IP, malformed) giữ flow = null
+        if (tr.get("protocol") not in ("TCP", "UDP")
+                or not net.get("src_ip") or not net.get("dst_ip")
+                or not isinstance(tr.get("src_port"), int)
+                or not isinstance(tr.get("dst_port"), int)):
+            event["flow"] = new_section()
+            return event
         try:
             now = event["timestamp"]
             self._expire(now)
