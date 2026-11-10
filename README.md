@@ -66,6 +66,8 @@ python src/main.py --check-rules --rules rules/local.rules --rules-report rules_
 | `--flows FILE` | ghi flow đã đóng vào file jsonl (vd `flows.jsonl`) |
 | `--tcp-timeout N` | idle timeout TCP (giây), mặc định 300 |
 | `--udp-timeout N` | idle timeout UDP (giây), mặc định 60 |
+| `--skip-unknown` | event có application protocol `UNKNOWN` → `processing_action=skip` (mặc định chỉ đánh dấu `partial`) |
+| `--max-payload N` | payload lớn hơn N byte → `partial` + `skip` (mặc định không giới hạn) |
 | `--rules FILE` | file `.rules` (lặp lại được để nạp nhiều file) |
 | `--rules-config FILE` | cấu hình JSON: `rule_files` (bật/tắt từng file), `disabled_sids`, `variables` |
 | `--alerts FILE` | ghi Detection Event, mặc định `alerts.jsonl` (chỉ khi có rule) |
@@ -103,7 +105,7 @@ File `--pretty` vẫn là JSON hợp lệ (nhiều document nối nhau): đọc 
 | `network` | `parse_network.py` | IPv4/IPv6: `src_ip`, `dst_ip`, `ttl`, `ip_length` (dùng tính `byte_count` của flow) |
 | `transport` | `parse_transport.py` | TCP/UDP/ICMP: port, `flags` (TCP state), `payload_length`, `payload_b64` (bytes gốc để decode) |
 | `application` | `parse_application.py` | HTTP/DNS/SMTP đã parse (path, body, DNS answers, SMTP command...) |
-| `decoder` | `decoder.py` | kết quả decode: `uri_decoded`, `text_decoded`, `body_decoded`, `decode_method`, `decode_status` (`ok/partial/error/not_applicable`), `decode_reason` |
+| `decoder` | `decoder.py` | kết quả decode: `uri_decoded`, `text_decoded`, `body_decoded` (body SMTP Base64/QP hoặc body HTTP form-urlencoded), `decode_method`, `decode_status` (`ok/partial/error/not_applicable`), `decode_reason` |
 | `preprocess` | `preprocessor.py` | `preprocess_status` (`valid/partial/invalid`), `processing_action` (`continue/skip`), `reason`, `normalized` (protocol/IP/host/path/header/timestamp đã chuẩn hóa) |
 | `flow` | `flow_tracker.py` | `flow_id`, `direction` (`forward/backward`), `state` (TCP: `HANDSHAKE → ESTABLISHED → CLOSING → CLOSED/RESET`) |
 
@@ -154,6 +156,10 @@ Nội dung mỗi folder:
 - `flows.jsonl` – flow record đã đóng (testcase flow T07–T13, chạy với `--flows`)
 - `report.md` – cách chạy, input là gì, bảng kết quả mong đợi
 
+`T15`–`T17` là testcase bổ sung: khóa flow khi port đổi chỗ, decode body
+HTTP form-urlencoded, chính sách skip theo cấu hình. Testcase 1 của Bài tập 1
+(TCP handshake) nằm trong `TEST/Bai-tap-01/Testcase1_TCP_Handshake/`.
+
 Testcase Bài tập 3 nằm trong `TEST/BT3/T01..T14`, cùng format; thêm `test.rules`
 (rule của testcase), `rules_report.jsonl`, `alerts.jsonl`, `trace.jsonl`, `engine.log`.
 Lệnh chạy nằm trong `report.md` của từng folder.
@@ -166,4 +172,4 @@ Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
 |---|---|---|
 | `Big Pickle (OpenCode)` | Hỗ trợ xây dựng parser HTTP/DNS/SMTP | `src/parse_application.py`; `test.py` (script lọc packet phục vụ kiểm thử) |
 | `9router/cl/cline-free/mimo-v2.6-flash:high` (omp coding assistant) | Thiết kế pipeline Decoder → Preprocessor → Flow Tracker, scaffold schema section | `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`; phần ghép pipeline và field mới (`ip_length`, `payload_b64`, `smtp_body`) trong `src/main.py`, `src/parse_*.py` |
-| `Claude Opus 5.5 (Claude Code)` | Bài tập 3: thiết kế và viết Core Engine, testcase BT3; sửa lỗi mất payload HTTP/DNS ở transport parser | `src/rule_loader.py`, `src/rule_parser.py`, `src/rule_repository.py`, `src/rule_matcher.py`, `src/engine.py`, `src/detection.py`, `context()` trong `src/flow_tracker.py`, phần CLI rule trong `src/main.py`, `_payload_bytes` trong `src/parse_transport.py`, `rules/`, `TEST/BT3/` |
+| `Claude Opus 5.5 (Claude Code)` | Bài tập 3: thiết kế và viết Core Engine, testcase BT3; sửa lỗi mất payload HTTP/DNS ở transport parser; rà soát theo yêu cầu `docs/`, sửa lỗi gộp nhầm flow, thêm decode body form-urlencoded, thêm `--skip-unknown`/`--max-payload`, bổ sung testcase | `_key()` + kiểm tra TCP/UDP trong `track()` của `src/flow_tracker.py`, decode form body trong `src/decoder.py`, `CONFIG`/`configure()` trong `src/preprocessor.py`, `src/rule_loader.py`, `src/rule_parser.py`, `src/rule_repository.py`, `src/rule_matcher.py`, `src/engine.py`, `src/detection.py`, `context()` trong `src/flow_tracker.py`, phần CLI rule trong `src/main.py`, `_payload_bytes` trong `src/parse_transport.py`, `rules/`, `TEST/BT3/`, `TEST/Bai-tap-02/T15..T17`, `TEST/Bai-tap-01/Testcase1_TCP_Handshake/` |
