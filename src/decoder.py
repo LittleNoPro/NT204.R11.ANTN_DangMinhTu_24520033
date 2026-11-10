@@ -17,8 +17,8 @@ from urllib.parse import unquote, unquote_plus
 DECODER_SECTION_SCHEMA = {
     "uri_decoded": None,       # URI sau percent-decode (T01)
     "text_decoded": None,      # text sau HTML entity decode (T02)
-    "body_decoded": None,      # body SMTP sau Base64/Quoted-Printable (T03)
-    "decode_method": None,     # percent | html_entity | base64 | quoted_printable | none
+    "body_decoded": None,      # body SMTP sau Base64/QP (T03) hoặc body HTTP form-urlencoded
+    "decode_method": None,     # percent | form_urlencoded | html_entity | base64 | quoted_printable
     "decode_status": None,     # ok | partial | error | not_applicable (T03, T04)
     "decode_reason": None,     # lý do partial/error, ví dụ "invalid utf-8 at byte 14"
 }
@@ -92,8 +92,20 @@ def apply(event):
                 section["decode_method"] = "percent"
                 section["decode_status"] = "ok"
 
+        # body HTTP application/x-www-form-urlencoded: '+' → space, %XX → byte
+        app = event.get("application") or {}
+        body = app.get("body")
+        content_type = str(app.get("content_type") or "").lower()
+        if (app.get("protocol") == "HTTP" and body
+                and "application/x-www-form-urlencoded" in content_type):
+            form = unquote_plus(body)
+            if form != body:
+                section["body_decoded"] = form
+                if section["decode_status"] != "ok":
+                    section["decode_method"] = "form_urlencoded"
+                    section["decode_status"] = "ok"
+
         # T02: HTML entity trên body text — chỉ decode entity, tag thật giữ nguyên
-        body = (event.get("application") or {}).get("body")
         if body and html.unescape(body) != body:
             section["text_decoded"] = html.unescape(body)
             if section["decode_status"] != "ok":     # percent đã set thì không ghi đè
