@@ -246,8 +246,8 @@ Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
 
 ## AI Usage
 
-| Model | Purpose | AI-assisted code |
-|---|---|---|
-| `Big Pickle (OpenCode)` | Hỗ trợ xây dựng parser HTTP/DNS/SMTP | `src/parse_application.py`; `test.py` (script lọc packet phục vụ kiểm thử) |
-| `9router/cl/cline-free/mimo-v2.6-flash:high` (omp coding assistant) | Thiết kế pipeline Decoder → Preprocessor → Flow Tracker, scaffold schema section | `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`; phần ghép pipeline và field mới (`ip_length`, `payload_b64`, `smtp_body`) trong `src/main.py`, `src/parse_*.py` |
-| `Claude Opus 5.5 (Claude Code)` | Core Engine và testcase của engine; sửa lỗi mất payload HTTP/DNS ở transport parser; sửa lỗi gộp nhầm flow, thêm decode body form-urlencoded, thêm chính sách `skip_unknown`/`max_payload`, bổ sung testcase; vẽ sơ đồ kiến trúc và viết lại README; audit và sửa lỗi (backtracking content, ghi flow khi đóng, chiều flow khi bắt giữa chừng, kết nối dùng lại port, URL mã hóa nhiều lớp, `-n` mặc định không giới hạn); sắp xếp lại `main.py` và rút gọn CLI theo kiểu Snort/Suricata | `_key()` + kiểm tra TCP/UDP trong `track()` của `src/flow_tracker.py`, decode form body trong `src/decoder.py`, `CONFIG`/`configure()` trong `src/preprocessor.py`, `src/rule_loader.py`, `src/rule_parser.py`, `src/rule_repository.py`, `src/rule_matcher.py`, `src/engine.py`, `src/detection.py`, `context()` trong `src/flow_tracker.py`, phần CLI rule trong `src/main.py`, `_payload_bytes` trong `src/parse_transport.py`, `rules/`, `TEST/Bai-tap-03/`, `TEST/Bai-tap-02/T15..T17`, `TEST/Bai-tap-01/Testcase1_TCP_Handshake/`, `_search`/`content_buffers` trong `src/rule_matcher.py`, `_client_is_dst`/`_expire`/`_close`/`flush` trong `src/flow_tracker.py`, `_percent_decode` trong `src/decoder.py`, `src/main.py`, `assets/`, `README.md` |
+| Model | Hỗ trợ |
+|---|---|
+| Big Pickle (OpenCode) | Parser HTTP/DNS/SMTP (`parse_application.py`), `test.py` |
+| mimo-v2.6-flash (omp) | Decoder, Preprocessor, Flow Tracker và phần ghép pipeline |
+| Claude Opus 5.5 (Claude Code) | Detection engine (`rule_*.py`, `engine.py`, `detection.py`), testcase engine, sửa lỗi và audit, cấu trúc `main.py` + CLI, sơ đồ kiến trúc, README |
