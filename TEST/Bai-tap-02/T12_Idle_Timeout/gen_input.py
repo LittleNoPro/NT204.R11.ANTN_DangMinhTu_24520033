@@ -1,6 +1,6 @@
 """Sinh input.pcap cho T12 — idle timeout: chênh timestamp vượt timeout.
 
-Chạy với --udp-timeout 5 để 10s chênh nhau vượt timeout.
+Chạy với config.json (timeout UDP 5 giây) để 10s chênh nhau vượt timeout.
 """
 import os
 

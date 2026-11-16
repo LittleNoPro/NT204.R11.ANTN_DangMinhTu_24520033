@@ -30,7 +30,7 @@ def parse_network(packet):
                 "src_ip": ipv6.src,
                 "dst_ip": ipv6.dst,
                 "hop_limit": ipv6.hlim,
-                "ip_length": ipv6.plen,
+                "ip_length": ipv6.plen + 40,   # plen không tính 40 byte header, IPv4 len thì có
             }
 
         return {

@@ -6,11 +6,10 @@
 # 1. Sinh input.pcap (10 frame, timestamp cố định)
 .venv/bin/python TEST/Bai-tap-02/T01_HTTP_URL_Decode/gen_input.py
 
-# 2. Chạy pipeline → output.jsonl (xem terminal + file kết quả)
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T01_HTTP_URL_Decode/input.pcap \
-    --count 20 \
-    --output TEST/Bai-tap-02/T01_HTTP_URL_Decode/output.jsonl
+# 2. Chạy pipeline → events.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T01_HTTP_URL_Decode/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T01_HTTP_URL_Decode
 ```
 
 ## Input
@@ -20,7 +19,7 @@
 
 ## Output
 
-- `output.jsonl` — 10 event, quan tâm `application.path` (raw) và
+- `events.jsonl` — 10 event, quan tâm `application.path` (raw) và
   `decoder.uri_decoded` / `decode_method` / `decode_status`.
 
 ## Kết quả

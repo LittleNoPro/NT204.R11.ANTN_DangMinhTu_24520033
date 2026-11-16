@@ -1,14 +1,14 @@
-# Testcase 1 — TCP handshake (BT1)
+# Testcase 1 — TCP handshake
 
-Yêu cầu BT1: nhận diện SYN, SYN/ACK, ACK.
+Kiểm tra parser nhận diện đúng SYN, SYN/ACK, ACK.
 
 ## Cách chạy
 
 ```bash
 .venv/bin/python TEST/Bai-tap-01/Testcase1_TCP_Handshake/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-01/Testcase1_TCP_Handshake/input.pcap \
-    --count 10 --output TEST/Bai-tap-01/Testcase1_TCP_Handshake/output.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-01/Testcase1_TCP_Handshake/input.pcap \
+    -n 10 \
+    -l TEST/Bai-tap-01/Testcase1_TCP_Handshake
 ```
 
 ## Input
@@ -18,7 +18,7 @@ Yêu cầu BT1: nhận diện SYN, SYN/ACK, ACK.
 
 ## Output
 
-- `output.jsonl` — 3 event, quan tâm `transport.flags`, `seq`, `ack`, `payload_length`.
+- `events.jsonl` — 3 event, quan tâm `transport.flags`, `seq`, `ack`, `payload_length`.
 
 ## Kết quả
 
@@ -29,5 +29,5 @@ Yêu cầu BT1: nhận diện SYN, SYN/ACK, ACK.
 | 3 | client → server | `A` | 1001 / 5001 | ACK |
 
 Cả 3 frame có `payload_length = 0`, `application.protocol = HTTP`, `type = UNKNOWN`
-(nhận theo port 80, chưa có payload). Từ BT2 trở đi, Flow Tracker gán cả 3
+(nhận theo port 80, chưa có payload). Flow Tracker gán cả 3
 frame vào cùng `flow-0001`, state `HANDSHAKE → HANDSHAKE → ESTABLISHED`.

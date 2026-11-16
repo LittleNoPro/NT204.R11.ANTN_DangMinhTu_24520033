@@ -15,11 +15,11 @@ import base64, binascii, html, quopri
 from urllib.parse import unquote, unquote_plus
 
 DECODER_SECTION_SCHEMA = {
-    "uri_decoded": None,       # URI sau percent-decode (T01)
-    "text_decoded": None,      # text sau HTML entity decode (T02)
-    "body_decoded": None,      # body SMTP sau Base64/QP (T03) hoặc body HTTP form-urlencoded
+    "uri_decoded": None,       # URI sau percent-decode
+    "text_decoded": None,      # text sau HTML entity decode
+    "body_decoded": None,      # body SMTP sau Base64/QP hoặc body HTTP form-urlencoded
     "decode_method": None,     # percent | form_urlencoded | html_entity | base64 | quoted_printable
-    "decode_status": None,     # ok | partial | error | not_applicable (T03, T04)
+    "decode_status": None,     # ok | partial | error | not_applicable
     "decode_reason": None,     # lý do partial/error, ví dụ "invalid utf-8 at byte 14"
 }
 
@@ -28,11 +28,23 @@ def new_section():
     return dict(DECODER_SECTION_SCHEMA)
 
 
-def _percent_decode(uri): 
+MAX_DECODE_ROUNDS = 3   # giải mã lặp để bắt mã hóa nhiều lớp (%2527 → %27 → ')
+
+
+def _percent_decode(uri):
+    """Percent-decode lặp tới khi không đổi (tối đa MAX_DECODE_ROUNDS lần).
+
+    Mã hóa hai lần (`%2527`) là mẹo lách IDS quen thuộc: decode một lần chỉ
+    còn `%27`, không khớp content `'`.
+    """
     path, sep, query = uri.partition('?')
-    decoded = unquote(path)
-    if sep: 
-        decoded += '?' + unquote_plus(query)  
+    decoded = unquote(path) + ('?' + unquote_plus(query) if sep else '')
+    # các lớp sau chỉ giải %XX: '+' lúc này có thể là %2B đã giải, không phải dấu cách
+    for _ in range(MAX_DECODE_ROUNDS - 1):
+        step = unquote(decoded)
+        if step == decoded:
+            break
+        decoded = step
     return decoded
 
 
@@ -82,7 +94,7 @@ def apply(event):
     try:
         transport = event.get("transport") or {}
 
-        # T01: percent decode — application.path giữ nguyên raw
+        # URL percent-decode — application.path giữ nguyên raw
         path = (event.get("application") or {}).get("path")
         if path:
             _, _, query = path.partition("?")
@@ -105,14 +117,14 @@ def apply(event):
                     section["decode_method"] = "form_urlencoded"
                     section["decode_status"] = "ok"
 
-        # T02: HTML entity trên body text — chỉ decode entity, tag thật giữ nguyên
+        # HTML entity trên body text — chỉ decode entity, tag thật giữ nguyên
         if body and html.unescape(body) != body:
             section["text_decoded"] = html.unescape(body)
             if section["decode_status"] != "ok":     # percent đã set thì không ghi đè
                 section["decode_method"] = "html_entity"
                 section["decode_status"] = "ok"
 
-        # T03: SMTP/MIME — Base64/Quoted-Printable theo header CTE
+        # SMTP/MIME — Base64/Quoted-Printable theo header CTE
         if ((event.get("application") or {}).get("protocol") == "SMTP"
                 and transport.get("payload_b64")):
             try:
@@ -129,7 +141,7 @@ def apply(event):
                 section["decode_status"] = "error"
                 section["decode_reason"] = f"mime decode failed: {error}"
 
-        # T04: payload không phải UTF-8 hợp lệ → partial, chương trình chạy tiếp
+        # payload không phải UTF-8 hợp lệ → partial, chương trình chạy tiếp
         # (DNS là giao thức nhị phân → không kiểm tra UTF-8)
         if (section["decode_status"] == "not_applicable"
                 and transport.get("payload_b64")

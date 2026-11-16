@@ -4,10 +4,9 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T09_TCP_Close/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T09_TCP_Close/input.pcap \
-    --count 50 --output TEST/Bai-tap-02/T09_TCP_Close/output.jsonl \
-    --flows TEST/Bai-tap-02/T09_TCP_Close/flows.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T09_TCP_Close/input.pcap \
+    -n 50 \
+    -l TEST/Bai-tap-02/T09_TCP_Close
 ```
 
 ## Input
@@ -18,7 +17,7 @@
 
 ## Output
 
-- `output.jsonl` (9 event) + `flows.jsonl` (2 flow).
+- `events.jsonl` (9 event) + `flows.jsonl` (2 flow).
 
 ## Kết quả
 

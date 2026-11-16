@@ -151,7 +151,11 @@ def match_dsize(rule, event):
 # ---------------------------------------------------------------------------
 
 def content_buffers(event):
-    """Các vùng dữ liệu để tìm content: payload gốc, sau đó dữ liệu đã decode."""
+    """Các vùng dữ liệu để tìm content: payload gốc, sau đó dữ liệu đã decode.
+
+    Trả về list (tên, bytes, bytes chữ thường). Engine tính một lần cho mỗi
+    event rồi dùng chung cho mọi rule.
+    """
     buffers = []
     payload_b64 = (event.get("transport") or {}).get("payload_b64")
     if payload_b64:
@@ -163,24 +167,30 @@ def content_buffers(event):
     for field in ("uri_decoded", "text_decoded", "body_decoded"):
         if decoder.get(field):
             buffers.append((field, decoder[field].encode("utf-8")))
-    return buffers
+    return [(name, data, data.lower()) for name, data in buffers]
 
 
-def _search(data, contents, index, prev_end):
+def _search(data, lowered, contents, index, prev_end, failed):
     """Tìm contents[index:] trong data, có backtracking cho relative match.
 
     Trả về list vị trí match hoặc None.
     - offset/depth: tính từ đầu buffer
     - distance/within: tính từ cuối match trước (prev_end); within giới hạn
       vùng tìm sau điểm bắt đầu (như depth nhưng tương đối)
+
+    `failed` ghi nhớ các lần tìm đã thất bại để không thử lại: không có nó,
+    payload do kẻ tấn công dựng (vd 1400 chữ "A" với rule A, A, A, B) bắt
+    backtracking thử hàng tỉ tổ hợp và làm IDS đứng.
+    - vùng tìm tới cuối buffer: thất bại từ vị trí s thì mọi vị trí >= s cũng
+      thất bại → chỉ cần nhớ vị trí nhỏ nhất (key = index)
+    - vùng tìm có giới hạn (depth/within): nhớ từng (index, start)
     """
     if index == len(contents):
         return []
     content = contents[index]
-    pattern = content["_bytes"]
-    haystack = data
+    pattern, haystack = content["_bytes"], data
     if content["nocase"]:
-        pattern, haystack = pattern.lower(), data.lower()
+        pattern, haystack = pattern.lower(), lowered
 
     if content["distance"] is not None or content["within"] is not None:
         start = prev_end + (content["distance"] or 0)
@@ -191,21 +201,34 @@ def _search(data, contents, index, prev_end):
     start = max(start, 0)
     end = len(haystack) if limit is None else min(len(haystack), start + limit)
 
+    if limit is None:
+        if start >= failed.get(index, len(haystack) + 1):
+            return None
+    elif (index, start) in failed:
+        return None
+
     pos = haystack.find(pattern, start, end)
     while pos >= 0:
-        rest = _search(data, contents, index + 1, pos + len(pattern))
+        rest = _search(data, lowered, contents, index + 1, pos + len(pattern), failed)
         if rest is not None:
             return [pos] + rest
         pos = haystack.find(pattern, pos + 1, end)
+
+    if limit is None:
+        failed[index] = min(start, failed.get(index, start))
+    else:
+        failed[(index, start)] = True
     return None
 
 
-def match_content(rule, event):
+def match_content(rule, event, buffers=None):
     contents = rule["contents"]
     if not contents:
         return True, None, []
-    for name, data in content_buffers(event):
-        positions = _search(data, contents, 0, 0)
+    if buffers is None:
+        buffers = content_buffers(event)
+    for name, data, lowered in buffers:
+        positions = _search(data, lowered, contents, 0, 0, {})
         if positions is not None:
             matched = [{"content": c["pattern"], "buffer": name, "offset": pos,
                         "nocase": c["nocase"]}
@@ -218,7 +241,7 @@ def match_content(rule, event):
 # Entry point
 # ---------------------------------------------------------------------------
 
-def match(rule, event, flow_ctx):
+def match(rule, event, flow_ctx, buffers=None):
     try:
         ok, reason = match_header(rule, event)
         if not ok:
@@ -232,7 +255,7 @@ def match(rule, event, flow_ctx):
         ok, reason = match_dsize(rule, event)
         if not ok:
             return _result(rule, False, "dsize", reason)
-        ok, reason, contents = match_content(rule, event)
+        ok, reason, contents = match_content(rule, event, buffers)
         if not ok:
             return _result(rule, False, "content", reason)
     except Exception as error:                # một rule lỗi không làm dừng engine

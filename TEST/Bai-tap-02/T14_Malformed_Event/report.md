@@ -4,10 +4,9 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T14_Malformed_Event/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T14_Malformed_Event/input.pcap \
-    --count 20 \
-    --output TEST/Bai-tap-02/T14_Malformed_Event/output.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T14_Malformed_Event/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T14_Malformed_Event
 ```
 
 Kiểm tra nhánh event hỏng mức event (port/timestamp/IP sai — không tạo được
@@ -34,7 +33,7 @@ print(p['preprocess_status'], p['processing_action'], p['reason'])"
 
 ## Output
 
-- `output.jsonl` — 6 event, quan tâm `preprocess_status` / `reason` /
+- `events.jsonl` — 6 event, quan tâm `preprocess_status` / `reason` /
   `transport.parse_error`.
 
 ## Kết quả

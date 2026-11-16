@@ -1,0 +1,3 @@
+{
+  "flow_timeout": {"tcp": 300, "udp": 5}
+}

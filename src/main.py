@@ -1,5 +1,21 @@
-import json
+"""IDS: bắt packet, đưa qua pipeline phát hiện và ghi kết quả ra JSON Lines.
+
+Luồng xử lý (số bước khớp với sơ đồ assets/architecture.png):
+    khởi động   load_rules(): Rule Loader → Rule Parser → Rule Repository
+    mỗi packet  process_packet(): parse → decode → preprocess → flow → engine → alert
+    kết thúc    đóng các flow còn mở, in thống kê
+
+Ví dụ:
+    python src/main.py -r capture.pcap -c rules/engine.json -l logs
+    sudo python src/main.py -i eth0 -c rules/engine.json
+    python src/main.py -T -c rules/engine.json
+"""
+
 import argparse
+import contextlib
+import itertools
+import json
+import os
 import sys
 
 from scapy.all import sniff
@@ -10,144 +26,129 @@ from parse_application import parse_application
 import decoder
 import preprocessor
 import flow_tracker
-import engine as core_engine
+import engine
+import rule_loader
 from rule_parser import public_view
-
-
-def process_packet(packet, timestamp):
-    event = {
-        "timestamp": timestamp,
-        "network": parse_network(packet),
-        "transport": parse_transport(packet),
-        "application": parse_application(packet),
-        "decoder": decoder.new_section(),
-        "preprocess": preprocessor.new_section(),
-        "flow": flow_tracker.new_section(),
-    }
-    event = decoder.apply(event)
-    event = preprocessor.apply(event)
-    return event
 
 
 def dumps(obj):
     return json.dumps(obj, default=str, ensure_ascii=False)
 
 
-def create_handler(outfile, pretty=False, tracker=None, rule_engine=None,
-                   alerts=None, trace=None):
-    state = {"packet_id": 0, "outfile": outfile}
+def process_packet(packet, packet_id, tracker, rule_engine):
+    """Đưa một packet qua toàn bộ pipeline. Trả về (event, alerts, trace)."""
+    event = {
+        "timestamp": float(packet.time),
+        "network": parse_network(packet),              # 2. parse L3
+        "transport": parse_transport(packet),          #    parse L4
+        "application": parse_application(packet),      #    parse L7
+        "decoder": decoder.new_section(),
+        "preprocess": preprocessor.new_section(),
+        "flow": flow_tracker.new_section(),
+        "packet_id": packet_id,
+    }
+    decoder.apply(event)                               # 3. giải mã
+    preprocessor.apply(event)                          # 4. kiểm tra + chuẩn hóa
+    tracker.track(event)                               # 5. gán flow
+    if rule_engine is None:
+        return event, [], None
+    alerts, trace = rule_engine.evaluate(event, tracker.context(event))   # 6–10. so rule
+    return event, alerts, trace
 
-    def handle_packet(packet):
-        state["packet_id"] += 1
-        timestamp = float(packet.time)
-        event = process_packet(packet, timestamp)
-        if tracker:
-            event = tracker.track(event)
-        event["packet_id"] = state["packet_id"]
 
-        if rule_engine:
-            flow_ctx = tracker.context(event) if tracker else None
-            detections, evaluation = rule_engine.evaluate(event, flow_ctx)
-            for det in detections:
-                alerts.write(dumps(det) + "\n")
+def load_rules(args, config):
+    """Khởi động: nạp và kiểm tra rule. Trả về RuleEngine, hoặc None nếu không có rule."""
+    if not (config["rule_files"] or args.rules):
+        return None
+    repo, warnings = engine.build_repository(args.rules, config)
+    for warning in warnings:
+        print(f"[rules] warning: {warning}", file=sys.stderr)
+    print(f"[rules] {repo.summary()}", file=sys.stderr)
+    if args.verbose:
+        with open(os.path.join(args.log_dir, "rules_report.jsonl"), "w", encoding="utf-8") as f:
+            for rule in repo.rules + repo.rejected:
+                f.write(dumps(public_view(rule)) + "\n")
+    return engine.RuleEngine(repo)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="IDS dựa trên rule cú pháp Snort. Thiết lập chi tiết nằm trong file cấu hình (-c).")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("-i", dest="interface", metavar="IFACE",
+                        help="bắt trực tiếp trên card mạng (cần root)")
+    source.add_argument("-r", dest="pcap", metavar="PCAP", help="đọc từ file PCAP")
+    parser.add_argument("-c", dest="config", metavar="CONFIG",
+                        help="file cấu hình JSON: rule, biến, timeout, chính sách (vd rules/engine.json)")
+    parser.add_argument("-s", dest="rules", metavar="RULES", action="append", default=[],
+                        help="nạp thêm file .rules (lặp lại được)")
+    parser.add_argument("-l", dest="log_dir", metavar="DIR", default="logs",
+                        help="thư mục ghi events/alerts/flows.jsonl (mặc định: logs)")
+    parser.add_argument("-n", dest="count", metavar="N", type=int, default=0,
+                        help="dừng sau N packet (mặc định: không giới hạn)")
+    parser.add_argument("-T", dest="test", action="store_true",
+                        help="chỉ nạp và kiểm tra rule rồi thoát")
+    parser.add_argument("-v", dest="verbose", action="store_true",
+                        help="ghi thêm trace.jsonl và rules_report.jsonl để gỡ lỗi")
+    args = parser.parse_args()
+    if not (args.interface or args.pcap or args.test):
+        parser.error("cần -i, -r hoặc -T")
+    return args
+
+
+def main():
+    args = parse_args()
+    try:
+        config = rule_loader.load_config(args.config)
+    except rule_loader.ConfigError as error:
+        sys.exit(f"[config] {error}")
+    preprocessor.configure(skip_unknown=config["skip_unknown"],
+                           max_payload=config["max_payload"])
+    os.makedirs(args.log_dir, exist_ok=True)
+
+    rule_engine = load_rules(args, config)
+    if args.test:
+        if rule_engine is None:
+            sys.exit("-T: không có rule nào để kiểm tra (dùng -c hoặc -s)")
+        return
+
+    with contextlib.ExitStack() as files:
+        def open_log(name):
+            path = os.path.join(args.log_dir, name)
+            return files.enter_context(open(path, "w", encoding="utf-8"))
+
+        events = open_log("events.jsonl")
+        flows = open_log("flows.jsonl")
+        alerts = open_log("alerts.jsonl") if rule_engine else None
+        trace = open_log("trace.jsonl") if rule_engine and args.verbose else None
+
+        def write_flow(flow):
+            flows.write(dumps(flow) + "\n")
+            flows.flush()
+
+        tracker = flow_tracker.FlowTracker(tcp_timeout=config["flow_timeout"]["tcp"],
+                                           udp_timeout=config["flow_timeout"]["udp"],
+                                           on_close=write_flow)
+        packet_ids = itertools.count(1)
+
+        def handle(packet):
+            event, detections, evaluation = process_packet(packet, next(packet_ids),
+                                                           tracker, rule_engine)
+            for alert in detections:                    # 11. ghi alert
+                alerts.write(dumps(alert) + "\n")
             if trace:
                 trace.write(dumps(evaluation) + "\n")
+            events.write(dumps(event) + "\n")
 
-        if pretty:
-            text = json.dumps(event, default=str, indent=2, ensure_ascii=False)
-        else:
-            text = json.dumps(event, default=str, ensure_ascii=False)
-        state["outfile"].write(text + "\n")
-        print(text, flush=True)
+        try:
+            sniff(iface=args.interface, offline=args.pcap, prn=handle, store=False,
+                  count=args.count)
+        finally:
+            tracker.flush()                            # ghi các flow còn mở, kể cả khi lỗi
 
-    return handle_packet
-
-
-def capture(num, outfile, pretty=False, interface=None, filename=None,
-            tracker=None, **engine_args):
-    sniff(
-        iface=interface,
-        offline=filename,
-        prn=create_handler(outfile, pretty, tracker, **engine_args),
-        store=False,
-        count=num,
-    )
+    if rule_engine:
+        print(f"[engine] {rule_engine.summary()}", file=sys.stderr)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="A simple command-line tool.")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--interface")
-    group.add_argument("--pcap")
-    parser.add_argument("--count", type=int, default=10)
-    parser.add_argument("--output", default="output.jsonl")
-    parser.add_argument("--pretty", action="store_true")
-    parser.add_argument("--flows", default=None,
-                        help="ghi flow đã đóng vào file jsonl")
-    parser.add_argument("--tcp-timeout", type=int, default=300)
-    parser.add_argument("--udp-timeout", type=int, default=60)
-    parser.add_argument("--skip-unknown", action="store_true",
-                        help="event có application protocol UNKNOWN → processing_action=skip")
-    parser.add_argument("--max-payload", type=int, default=None,
-                        help="payload lớn hơn N byte → partial + skip")
-    # --- Core Engine (bài tập 3) ---
-    parser.add_argument("--rules", action="append", default=[],
-                        help="file .rules (lặp lại được)")
-    parser.add_argument("--rules-config", default=None,
-                        help="file JSON: rule_files, disabled_sids, variables")
-    parser.add_argument("--alerts", default="alerts.jsonl",
-                        help="ghi Detection Event (khi có rule)")
-    parser.add_argument("--rules-report", default=None,
-                        help="ghi Internal Rule Object + status của mọi rule")
-    parser.add_argument("--trace", default=None,
-                        help="ghi candidate rules + kết quả match từng event")
-    parser.add_argument("--stats", default=None,
-                        help="ghi thống kê engine (JSON)")
-    parser.add_argument("--check-rules", action="store_true",
-                        help="chỉ nạp/validate rule rồi thoát")
-
-    args = parser.parse_args()
-    if not (args.interface or args.pcap or args.check_rules):
-        parser.error("one of --interface, --pcap, --check-rules is required")
-
-    preprocessor.configure(skip_unknown=args.skip_unknown,
-                           max_payload=args.max_payload)
-
-    rule_engine = None
-    if args.rules or args.rules_config:
-        repo, warnings = core_engine.build_repository(args.rules, args.rules_config)
-        for warning in warnings:
-            print(f"[rules] warning: {warning}", file=sys.stderr)
-        print(f"[rules] {repo.summary()}", file=sys.stderr)
-        if args.rules_report:
-            with open(args.rules_report, "w", encoding="utf-8") as f:
-                for rule in repo.rules + repo.rejected:
-                    f.write(dumps(public_view(rule)) + "\n")
-        rule_engine = core_engine.RuleEngine(repo)
-    if args.check_rules:
-        sys.exit(0)
-
-    tracker = flow_tracker.FlowTracker(tcp_timeout=args.tcp_timeout,
-                                       udp_timeout=args.udp_timeout)
-    alerts = open(args.alerts, "w", encoding="utf-8") if rule_engine else None
-    trace = open(args.trace, "w", encoding="utf-8") if rule_engine and args.trace else None
-    with open(args.output, "w", encoding="utf-8") as outfile:
-        capture(args.count, outfile, args.pretty,
-                interface=args.interface, filename=args.pcap,
-                tracker=tracker, rule_engine=rule_engine,
-                alerts=alerts, trace=trace)
-    for f in (alerts, trace):
-        if f:
-            f.close()
-    if rule_engine:
-        print(f"[engine] {rule_engine.summary()}", file=sys.stderr)
-        if args.stats:
-            with open(args.stats, "w", encoding="utf-8") as f:
-                json.dump(rule_engine.summary(), f, indent=2)
-
-    if args.flows:
-        with open(args.flows, "w", encoding="utf-8") as f:
-            for flow in tracker.flush():
-                f.write(json.dumps(flow, default=str, ensure_ascii=False) + "\n")
-    else:
-        tracker.flush()
+    main()

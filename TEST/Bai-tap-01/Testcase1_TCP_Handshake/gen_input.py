@@ -1,4 +1,4 @@
-"""Sinh input.pcap cho testcase 1 (BT1) — TCP 3-way handshake SYN → SYN/ACK → ACK."""
+"""Sinh input.pcap cho testcase 1 — TCP 3-way handshake SYN → SYN/ACK → ACK."""
 import os
 
 from scapy.all import Ether, IP, TCP, PcapWriter

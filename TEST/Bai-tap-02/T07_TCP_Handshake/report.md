@@ -4,10 +4,9 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T07_TCP_Handshake/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T07_TCP_Handshake/input.pcap \
-    --count 50 --output TEST/Bai-tap-02/T07_TCP_Handshake/output.jsonl \
-    --flows TEST/Bai-tap-02/T07_TCP_Handshake/flows.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T07_TCP_Handshake/input.pcap \
+    -n 50 \
+    -l TEST/Bai-tap-02/T07_TCP_Handshake
 ```
 
 ## Input
@@ -16,7 +15,7 @@
 
 ## Output
 
-- `output.jsonl` (3 event, trường `flow`) + `flows.jsonl` (1 flow).
+- `events.jsonl` (3 event, trường `flow`) + `flows.jsonl` (1 flow).
 
 ## Kết quả
 

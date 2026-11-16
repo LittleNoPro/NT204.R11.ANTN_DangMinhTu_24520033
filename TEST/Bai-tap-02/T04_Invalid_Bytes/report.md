@@ -4,10 +4,9 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T04_Invalid_Bytes/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T04_Invalid_Bytes/input.pcap \
-    --count 20 \
-    --output TEST/Bai-tap-02/T04_Invalid_Bytes/output.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T04_Invalid_Bytes/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T04_Invalid_Bytes
 ```
 
 ## Input
@@ -17,7 +16,7 @@
 
 ## Output
 
-- `output.jsonl` — 8 event, quan tâm `decoder.decode_status` / `decode_reason`.
+- `events.jsonl` — 8 event, quan tâm `decoder.decode_status` / `decode_reason`.
 
 ## Kết quả
 

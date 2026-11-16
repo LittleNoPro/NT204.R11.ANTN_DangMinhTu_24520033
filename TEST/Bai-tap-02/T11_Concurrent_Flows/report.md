@@ -4,10 +4,9 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T11_Concurrent_Flows/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T11_Concurrent_Flows/input.pcap \
-    --count 50 --output TEST/Bai-tap-02/T11_Concurrent_Flows/output.jsonl \
-    --flows TEST/Bai-tap-02/T11_Concurrent_Flows/flows.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T11_Concurrent_Flows/input.pcap \
+    -n 50 \
+    -l TEST/Bai-tap-02/T11_Concurrent_Flows
 ```
 
 ## Input
@@ -19,7 +18,7 @@
 
 ## Output
 
-- `output.jsonl` (6 event) + `flows.jsonl` (3 flow).
+- `events.jsonl` (6 event) + `flows.jsonl` (3 flow).
 
 ## Kết quả
 

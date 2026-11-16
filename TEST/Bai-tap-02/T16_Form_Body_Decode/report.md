@@ -10,9 +10,9 @@ nguyên; bản decode nằm ở `decoder.body_decoded`.
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T16_Form_Body_Decode/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T16_Form_Body_Decode/input.pcap \
-    --count 20 --output TEST/Bai-tap-02/T16_Form_Body_Decode/output.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T16_Form_Body_Decode/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T16_Form_Body_Decode
 ```
 
 ## Input
@@ -22,7 +22,7 @@ nguyên; bản decode nằm ở `decoder.body_decoded`.
 
 ## Output
 
-- `output.jsonl` — 4 event, quan tâm `application.body` (raw) và
+- `events.jsonl` — 4 event, quan tâm `application.body` (raw) và
   `decoder.body_decoded` / `decode_method` / `decode_status`.
 
 ## Kết quả
@@ -34,5 +34,5 @@ nguyên; bản decode nằm ở `decoder.body_decoded`.
 | 3 | application/json | `{"q": "%27%20OR%201%3D1"}` | không decode (không phải form) → `not_applicable` |
 | 4 | form-urlencoded | `user=admin&pass=secret` | không có gì để decode → `body_decoded = null`, `not_applicable` |
 
-Vì Matching Engine (BT3) tìm content cả trong `body_decoded`, rule
+Vì Matching Engine tìm content cả trong `body_decoded`, rule
 `content:"' OR 1=1"` giờ bắt được SQL injection nằm trong body POST (frame 1).

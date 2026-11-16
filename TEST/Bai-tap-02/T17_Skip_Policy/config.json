@@ -1,0 +1,12 @@
+{
+  "rule_files": [
+    {"path": "../../../rules/local.rules", "enabled": true}
+  ],
+  "variables": {
+    "HOME_NET": "any",
+    "EXTERNAL_NET": "any",
+    "HTTP_PORTS": "[80,8000,8080,8888]"
+  },
+  "skip_unknown": true,
+  "max_payload": 200
+}

@@ -4,22 +4,21 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T12_Idle_Timeout/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T12_Idle_Timeout/input.pcap \
-    --count 50 --output TEST/Bai-tap-02/T12_Idle_Timeout/output.jsonl \
-    --flows TEST/Bai-tap-02/T12_Idle_Timeout/flows.jsonl \
-    --udp-timeout 5
+.venv/bin/python src/main.py -c TEST/Bai-tap-02/T12_Idle_Timeout/config.json \
+    -r TEST/Bai-tap-02/T12_Idle_Timeout/input.pcap \
+    -n 50 \
+    -l TEST/Bai-tap-02/T12_Idle_Timeout
 ```
 
 ## Input
 
 - `input.pcap` — 2 frame UDP DNS cùng 5-tuple, `pkt.time` chênh **10 giây**
-  (vượt `--udp-timeout 5`): query `first.example.com` @t=0, query
+  (vượt timeout UDP 5 giây trong `config.json`): query `first.example.com` @t=0, query
   `second.example.com` @t=10.
 
 ## Output
 
-- `output.jsonl` (2 event) + `flows.jsonl` (2 flow).
+- `events.jsonl` (2 event) + `flows.jsonl` (2 flow).
 
 ## Kết quả
 

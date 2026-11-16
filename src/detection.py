@@ -1,7 +1,8 @@
 """Module Detection Event Generator.
 
-Sinh Detection Event thống nhất khi một rule MATCH; Alert/Logging/Response ở
-bài tập sau chỉ cần đọc cấu trúc này, không cần biết rule hay packet gốc.
+Sinh Detection Event thống nhất khi một rule MATCH; các module phía sau
+(alert, logging, response) chỉ cần đọc cấu trúc này, không cần biết rule hay
+packet gốc.
 """
 
 DETECTION_EVENT_SCHEMA = {

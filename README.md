@@ -1,175 +1,255 @@
-# Building an IDS using Python
+# IDS viết bằng Python
 
-Hệ thống IDS/IPS đơn giản: bắt packet (live interface hoặc file PCAP) → parse →
-decode → chuẩn hóa → gán flow/connection → ghi JSON Lines. Output là input của
-các module Feature Extractor / Detection Engine phía sau pipeline.
+Hệ thống phát hiện xâm nhập (IDS) dựa trên chữ ký: bắt packet từ card mạng hoặc
+file PCAP, phân tích và giải mã nội dung, theo dõi từng kết nối, rồi so với bộ rule
+cú pháp Snort để sinh cảnh báo. Mọi kết quả được ghi ra file JSON Lines để công cụ
+khác (SIEM, script, `jq`) đọc tiếp.
 
-**Pipeline:**
+## Kiến trúc
 
-```
-Packet Capture & Parser
-        ↓  event (JSON object)
-Decoder → Preprocessor → Flow/Connection Tracker
-        ↓  normalized event + flow context
-Core Engine: Evaluation Engine → Repository/Indexer → Matching Engine → Detection Event
-        ↓
-events.jsonl (mỗi packet 1 dòng) + flows.jsonl (mỗi flow đóng 1 dòng) + alerts.jsonl (mỗi rule match 1 dòng)
-```
+![IDS Architecture](assets/architecture.png)
 
-Mỗi mắt xích là một module riêng trong `src/`; `main.py` chỉ capture, gọi parse
-và ghép các module lại với nhau.
+> File gốc để chỉnh sửa: [`assets/architecture.excalidraw`](assets/architecture.excalidraw)
+> (mở bằng [excalidraw.com](https://excalidraw.com)).
 
-### Tools and Libraries Used
-- `Python`: for building the logic and handling the CLI.
-- `Scapy`: to capture and parse network packets.
-- `argparse`: to allow command-line arguments for interface selection and filtering.
+Hệ thống có hai luồng:
 
-### Project Structure
-```
-src/
-  main.py               # CLI + capture + ghép pipeline (7 section/event)
-  parse_network.py      # Network Parser: IPv4/IPv6
-  parse_transport.py    # Transport Parser: TCP/UDP/ICMP
-  parse_application.py  # Application Parser: HTTP/DNS/SMTP
-  decoder.py            # percent/HTML entity/Base64/Quoted-Printable decoding
-  preprocessor.py       # validation + normalization
-  flow_tracker.py       # 5-tuple flow, TCP state, idle timeout, stats, flow context
-  rule_loader.py        # BT3: đọc file .rules + config enable/disable
-  rule_parser.py        # BT3: Rule Parser & Validator → Internal Rule Object
-  rule_repository.py    # BT3: Rule Repository / Indexer (protocol + port)
-  rule_matcher.py       # BT3: Rule Matching Engine (header/flow/flags/dsize/content)
-  engine.py             # BT3: Rule Evaluation Engine + thống kê
-  detection.py          # BT3: Detection Event Generator
-rules/
-  local.rules           # bộ rule mẫu (cú pháp Snort)
-  engine.json           # cấu hình: rule_files (enabled), disabled_sids, variables
-TEST/                   # kết quả mỗi testcase (Bai-tap-01/, Bai-tap-02/, BT3/): gen_input.py, input.pcap, output.jsonl, report.md
-```
+**Lúc khởi động (nét đứt):** rule được nạp **một lần**. Loader đọc file `.rules`,
+Parser dịch từng rule sang dạng máy so được và loại rule viết sai, Repository xếp
+rule hợp lệ theo protocol + port để tra nhanh.
 
-### Usage
+**Với mỗi packet (nét liền, đánh số):**
+
+| Bước | Thành phần | Việc làm |
+|---|---|---|
+| 1–2 | **Capture & Parse** | Scapy bắt packet; tách IP (L3), TCP/UDP/ICMP (L4), HTTP/DNS/SMTP (L7) thành một **event** dạng JSON |
+| 3 | **Decoder** | Giải mã dữ liệu bị ngụy trang: URL `%27` (kể cả mã hóa nhiều lớp `%2527`), HTML entity, Base64, Quoted-Printable, form body |
+| 4 | **Preprocessor** | Kiểm tra và chuẩn hóa event; event hỏng hoặc ngoài chính sách bị đánh dấu `skip` |
+| 5 | **Flow Tracker** | Gom packet thành kết nối (5-tuple), biết chiều client→server và trạng thái TCP |
+| 6–7 | **Evaluation Engine ⇄ Rule Repository** | Bỏ qua event `skip`; lấy các rule *liên quan* tới protocol/port của packet |
+| 8–9 | **Matching Engine** | So từng rule theo thứ tự `header → flow → flags → dsize → content`, sai bước nào dừng ở bước đó |
+| 10–11 | **Alert Generator** | Mỗi rule khớp sinh một alert, ghi vào `alerts.jsonl` |
+
+Song song đó, mọi event được ghi vào `events.jsonl`, và mỗi kết nối được ghi vào
+`flows.jsonl` ngay khi nó đóng (kết nối còn mở được ghi lúc chương trình kết thúc).
+
+### Vì sao chia như vậy
+
+- **Decoder đứng trước Engine:** kẻ tấn công thường mã hóa payload. `%27%20OR%201%3D1`
+  chỉ khớp rule `content:"' OR 1=1"` sau khi được giải mã. Matcher tìm content
+  trong payload gốc **và** trong dữ liệu đã giải mã.
+- **Flow Tracker đứng trước Engine:** rule như `flow:to_server,established` cần biết
+  packet đi chiều nào và kết nối đã bắt tay xong chưa — một packet đơn lẻ không cho
+  biết điều đó.
+- **Rule được biên dịch sẵn lúc khởi động:** dịch biến (`$HTTP_PORTS`), hex
+  (`|0d 0a|`), dải IP chỉ làm một lần; rule sai bị báo ngay thay vì làm hỏng lúc chạy.
+- **Index theo protocol + port:** packet DNS port 53 không phải thử rule HTTP port 80.
+- **Matcher kiểm tra từ rẻ đến đắt:** so IP/port trước, tìm chuỗi trong payload sau
+  cùng, nên đa số rule bị loại trước khi phải tìm chuỗi.
+- **Không có module nào làm dừng hệ thống:** packet hỏng, rule sai, file rule thiếu
+  đều chỉ sinh cảnh báo.
+- **Chạy lâu không phình bộ nhớ:** flow đã đóng được ghi ra file ngay rồi bỏ khỏi
+  RAM; việc tìm content ghi nhớ các lần thử thất bại nên payload do kẻ tấn công dựng
+  không làm engine đứng.
+
+## Thành phần và mã nguồn
+
+| Thành phần | File | Ghi chú |
+|---|---|---|
+| CLI, capture, ghép pipeline | `src/main.py` | Gọi lần lượt các module, ghi file đầu ra |
+| Parser L3 / L4 / L7 | `src/parse_network.py`, `parse_transport.py`, `parse_application.py` | IPv4/IPv6; TCP/UDP/ICMP; HTTP/DNS/SMTP |
+| Decoder | `src/decoder.py` | `uri_decoded`, `text_decoded`, `body_decoded` + trạng thái decode |
+| Preprocessor | `src/preprocessor.py` | `valid/partial/invalid`, `continue/skip`, dữ liệu đã chuẩn hóa |
+| Flow Tracker | `src/flow_tracker.py` | 5-tuple, trạng thái TCP, idle timeout, thống kê flow |
+| Rule Loader | `src/rule_loader.py` | Đọc nhiều file `.rules`, bỏ comment, nối dòng `\`, bật/tắt theo config |
+| Rule Parser | `src/rule_parser.py` | Rule text → Rule Object; phân loại `valid / invalid / unsupported` |
+| Rule Repository | `src/rule_repository.py` | Lưu rule hợp lệ, index theo protocol + port |
+| Evaluation Engine | `src/engine.py` | Lấy rule ứng viên, gọi matcher, thống kê |
+| Matching Engine | `src/rule_matcher.py` | `MATCH / NO_MATCH` + bước bị loại + lý do |
+| Alert Generator | `src/detection.py` | Alert theo schema cố định |
+
+## Cài đặt và chạy
+
+Yêu cầu Python 3 và Scapy.
+
 ```bash
-python src/main.py --pcap test.pcap --count 10 --output out.jsonl
-sudo python src/main.py --interface wlan0 --count 20
-python src/main.py --pcap test.pcap --count 10 --output out.jsonl --pretty
-python src/main.py --pcap test.pcap --output out.jsonl --flows flows.jsonl
-python src/main.py --pcap test.pcap --count 100 --rules-config rules/engine.json --alerts alerts.jsonl
-python src/main.py --check-rules --rules rules/local.rules --rules-report rules_report.jsonl
+python3 -m venv .venv
+.venv/bin/pip install scapy
 ```
 
-| Flag | Ý nghĩa |
+Cách dùng giống Snort/Suricata: chọn nguồn packet, trỏ tới file cấu hình, kết quả
+ghi vào một thư mục log.
+
+```bash
+# đọc file PCAP
+.venv/bin/python src/main.py -r capture.pcap -c rules/engine.json
+
+# giám sát trực tiếp trên card mạng (cần root, dừng bằng Ctrl+C)
+sudo .venv/bin/python src/main.py -i eth0 -c rules/engine.json -l /var/log/ids
+
+# chỉ kiểm tra bộ rule rồi thoát
+.venv/bin/python src/main.py -T -c rules/engine.json
+```
+
+| Tùy chọn | Ý nghĩa |
 |---|---|
-| `--pcap FILE` | đọc packet từ file PCAP (loại trừ `--interface`) |
-| `--interface IF` | live capture từ interface (cần sudo) |
-| `--count N` | số packet tối đa, mặc định 10 |
-| `--output FILE` | file kết quả, mặc định `output.jsonl` |
-| `--pretty` | JSON thụt lề 2 spaces, dễ đọc hơn |
-| `--flows FILE` | ghi flow đã đóng vào file jsonl (vd `flows.jsonl`) |
-| `--tcp-timeout N` | idle timeout TCP (giây), mặc định 300 |
-| `--udp-timeout N` | idle timeout UDP (giây), mặc định 60 |
-| `--skip-unknown` | event có application protocol `UNKNOWN` → `processing_action=skip` (mặc định chỉ đánh dấu `partial`) |
-| `--max-payload N` | payload lớn hơn N byte → `partial` + `skip` (mặc định không giới hạn) |
-| `--rules FILE` | file `.rules` (lặp lại được để nạp nhiều file) |
-| `--rules-config FILE` | cấu hình JSON: `rule_files` (bật/tắt từng file), `disabled_sids`, `variables` |
-| `--alerts FILE` | ghi Detection Event, mặc định `alerts.jsonl` (chỉ khi có rule) |
-| `--rules-report FILE` | ghi Internal Rule Object + `status`/`reason` của mọi rule |
-| `--trace FILE` | ghi candidate rules và kết quả MATCH/NO_MATCH của từng event |
-| `--stats FILE` | ghi thống kê engine (JSON) |
-| `--check-rules` | chỉ nạp/validate rule rồi thoát (không cần `--pcap`) |
+| `-r PCAP` / `-i IFACE` | Đọc file PCAP hoặc bắt trực tiếp trên card mạng |
+| `-c CONFIG` | File cấu hình: rule, biến, timeout, chính sách (xem mục Cấu hình) |
+| `-s RULES` | Nạp thêm file `.rules`, lặp lại được |
+| `-l DIR` | Thư mục log, mặc định `logs/` |
+| `-n N` | Dừng sau N packet, mặc định không giới hạn |
+| `-T` | Chỉ nạp và kiểm tra rule rồi thoát |
+| `-v` | Ghi thêm `trace.jsonl` và `rules_report.jsonl` để gỡ lỗi |
 
-### Output Format
-Compact (mặc định, 1 packet = 1 dòng — dùng để máy đọc / jq):
-```
-{"packet_id":1,"timestamp":...,"network":{...},"transport":{...},"application":{...},"decoder":{...},"preprocess":{...},"flow":{...}}
+Cảnh báo khi nạp rule và thống kê engine được in ra stderr.
+
+## Đầu ra
+
+Mọi file nằm trong thư mục log (`-l`):
+
+| File | Mỗi dòng là |
+|---|---|
+| `events.jsonl` | Một packet đã xử lý (event) |
+| `alerts.jsonl` | Một lần rule khớp (khi có rule) |
+| `flows.jsonl` | Một kết nối, ghi ngay khi kết nối đóng, kèm số packet/byte và lý do kết thúc |
+| `trace.jsonl` | (`-v`) Rule ứng viên và kết quả MATCH/NO_MATCH của từng event |
+| `rules_report.jsonl` | (`-v`) Trạng thái và lý do của từng rule |
+
+**Event** gồm 7 phần, mỗi phần do một module điền:
+
+| Phần | Module | Nội dung chính |
+|---|---|---|
+| `packet_id`, `timestamp` | `main.py` | Thứ tự và thời điểm packet |
+| `network` | parser L3 | `src_ip`, `dst_ip`, `ttl`, `ip_length` |
+| `transport` | parser L4 | Port, cờ TCP, `payload_length`, `payload_b64` |
+| `application` | parser L7 | HTTP method/path/header/body, DNS query/answer, lệnh SMTP |
+| `decoder` | Decoder | Dữ liệu đã giải mã, `decode_method`, `decode_status` |
+| `preprocess` | Preprocessor | `preprocess_status`, `processing_action`, `reason`, `normalized` |
+| `flow` | Flow Tracker | `flow_id`, `direction`, `state` |
+
+Thiếu dữ liệu thì field là `null`, list là `[]`.
+
+**Alert** ví dụ:
+
+```json
+{"timestamp": 1700000003.0, "packet_id": 4, "sid": 100001, "rev": 1,
+ "msg": "Directory traversal detected", "priority": 1, "classtype": "web-application-attack",
+ "protocol": "TCP", "application_protocol": "HTTP",
+ "src_ip": "10.0.0.5", "src_port": 52133, "dst_ip": "192.168.1.20", "dst_port": 80,
+ "flow_id": "flow-0001", "flow_direction": "forward", "flow_state": "ESTABLISHED",
+ "match": {"contents": [{"content": "../", "buffer": "payload", "offset": 12, "nocase": false}],
+           "flow": {"direction": "to_server", "state": "established"}}}
 ```
 
-Pretty (`--pretty`, 1 packet = nhiều dòng):
+`match` cho biết rule khớp ở đâu: content nào, trong vùng dữ liệu nào (`payload`
+hay `uri_decoded`...), ở vị trí nào.
+
+## Viết rule
+
+Rule dùng cú pháp Snort, mỗi rule một dòng (hoặc nối dòng bằng `\`):
+
 ```
+alert tcp any any -> any $HTTP_PORTS (msg:"SQL injection OR 1=1"; flow:to_server,established; content:"' OR 1=1"; nocase; sid:1000002; rev:1;)
+```
+
+| Phần | Hỗ trợ |
+|---|---|
+| Action | `alert` |
+| Protocol | `tcp`, `udp`, `ip` |
+| IP | `any`, IPv4, CIDR, `[list]`, `!`, biến `$HOME_NET`... |
+| Port | `any`, `80`, `1:1024`, `[80,443]`, `!`, biến `$HTTP_PORTS`... |
+| Chiều | `->`, `<>` |
+| Thông tin | `msg`, `sid` (bắt buộc), `rev`, `classtype`, `priority`; `reference`/`metadata` được bỏ qua |
+| Điều kiện | `content` (cả `\|hex\|`) với `nocase`, `offset`, `depth`, `distance`, `within`; `flags`; `dsize`; `flow` (`to_server`, `to_client`, `established`, `not_established`) |
+
+Rule dùng tính năng chưa hỗ trợ (`pcre`, `byte_test`, `icmp`, action `drop`...) được
+đánh dấu `unsupported` và bỏ qua; rule sai cú pháp bị đánh dấu `invalid`. Cả hai chỉ
+sinh cảnh báo, không làm dừng hệ thống.
+
+## Cấu hình
+
+Mọi thiết lập nằm trong một file JSON truyền bằng `-c` (bản mặc định: `rules/engine.json`).
+Không có `-c` thì IDS chạy không rule, với timeout và chính sách mặc định như bên dưới.
+Đổi hành vi IDS bằng cách sửa file này, không cần sửa code hay thêm tham số dòng lệnh.
+
+```json
 {
-  "timestamp": ...,
-  "network": { "protocol": "IPv4", "src_ip": ..., "dst_ip": ..., "ttl": ... },
-  "transport": { "protocol": "TCP", "src_port": ..., "dst_port": ..., ... },
-  "application": { "protocol": "HTTP", "type": "request", ... },
-  "decoder": { "uri_decoded": ..., "decode_method": ..., "decode_status": ..., ... },
-  "preprocess": { "preprocess_status": ..., "processing_action": ..., "reason": ..., "normalized": { ... } },
-  "flow": { "flow_id": ..., "direction": ..., "state": ... },
-  "packet_id": 1
+  "rule_files": [{"path": "local.rules", "enabled": true}],
+  "disabled_sids": [],
+  "variables": {"HOME_NET": "any", "EXTERNAL_NET": "any", "HTTP_PORTS": "[80,8000,8080,8888]"},
+  "flow_timeout": {"tcp": 300, "udp": 60},
+  "skip_unknown": false,
+  "max_payload": null
 }
 ```
-File `--pretty` vẫn là JSON hợp lệ (nhiều document nối nhau): đọc bằng `jq -s '.' out.jsonl` hoặc `jq '.' out.jsonl`.
 
-### Ý nghĩa 7 section của event
-
-| Section | Module | Nội dung |
-|---|---|---|
-| `timestamp`, `packet_id` | `main.py` | thời điểm packet + thứ tự |
-| `network` | `parse_network.py` | IPv4/IPv6: `src_ip`, `dst_ip`, `ttl`, `ip_length` (dùng tính `byte_count` của flow) |
-| `transport` | `parse_transport.py` | TCP/UDP/ICMP: port, `flags` (TCP state), `payload_length`, `payload_b64` (bytes gốc để decode) |
-| `application` | `parse_application.py` | HTTP/DNS/SMTP đã parse (path, body, DNS answers, SMTP command...) |
-| `decoder` | `decoder.py` | kết quả decode: `uri_decoded`, `text_decoded`, `body_decoded` (body SMTP Base64/QP hoặc body HTTP form-urlencoded), `decode_method`, `decode_status` (`ok/partial/error/not_applicable`), `decode_reason` |
-| `preprocess` | `preprocessor.py` | `preprocess_status` (`valid/partial/invalid`), `processing_action` (`continue/skip`), `reason`, `normalized` (protocol/IP/host/path/header/timestamp đã chuẩn hóa) |
-| `flow` | `flow_tracker.py` | `flow_id`, `direction` (`forward/backward`), `state` (TCP: `HANDSHAKE → ESTABLISHED → CLOSING → CLOSED/RESET`) |
-
-3 section cuối do `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`
-định nghĩa schema và điền giá trị; thiếu dữ liệu thì để `null` (field) hoặc `[]`
-(list) cho nhất quán.
-
-### Core Engine (Bài tập 3)
-
-Engine chỉ làm việc với event đã chuẩn hóa + flow context, không đọc packet Scapy.
-
-| Module | Nhiệm vụ |
+| Khóa | Ý nghĩa |
 |---|---|
-| `rule_loader.py` | đọc nhiều file `.rules`, bỏ comment/dòng trống, nối rule nhiều dòng (`\`), bật/tắt file hoặc sid theo config; file lỗi chỉ cảnh báo |
-| `rule_parser.py` | tách header/options → Internal Rule Object; phân loại `valid` / `invalid` / `unsupported` kèm `reason` |
-| `rule_repository.py` | lưu rule valid, index theo protocol + port (dst/src/`<>`/generic) để lấy candidate |
-| `rule_matcher.py` | kiểm tra theo thứ tự header → flow → flags → dsize → content, trả `MATCH`/`NO_MATCH` + `stage` |
-| `engine.py` | lấy candidate, gọi matcher cho từng rule (nhiều rule cùng match được), thống kê |
-| `detection.py` | sinh Detection Event: timestamp, sid/rev/msg, priority/classtype, 5-tuple, protocol, application_protocol, flow_id, match info |
+| `rule_files` | File rule cần nạp (đường dẫn tính từ thư mục chứa file cấu hình), bật/tắt từng file |
+| `disabled_sids` | Tắt từng rule theo `sid` |
+| `variables` | Giá trị các biến dùng trong rule (`$HOME_NET`, `$HTTP_PORTS`...) |
+| `flow_timeout` | Số giây không có packet trước khi đóng flow TCP / UDP |
+| `skip_unknown` | `true`: không đánh giá event có protocol ứng dụng `UNKNOWN` |
+| `max_payload` | Không đánh giá payload lớn hơn N byte (`null` = không giới hạn) |
 
-Phạm vi rule hỗ trợ: action `alert`; protocol `tcp`/`udp`/`ip`; IP any/IPv4/CIDR/list/`!`;
-port any/single/range/list/`!`; biến `$HOME_NET`, `$HTTP_PORTS`...; direction `->`, `<>`;
-`msg`, `sid`, `rev`, `classtype`, `priority`; `content` (+ `|hex|`), `nocase`, `offset`,
-`depth`, `distance`, `within`; `flags`; `dsize`; `flow` (`to_server`, `to_client`,
-`established`, `not_established`). `reference`/`metadata` được chấp nhận và bỏ qua.
-Keyword khác (`pcre`, `http_uri`, `byte_test`...), action khác `alert`, protocol `icmp`
-→ `unsupported`, không làm dừng chương trình.
+Khóa bỏ trống thì dùng giá trị mặc định ở trên. Khóa sai tên hoặc sai kiểu (ví dụ
+`"max_payload": "200"`) bị báo lỗi ngay khi khởi động, IDS không chạy với cấu hình sai.
 
-Content được tìm trong payload gốc trước, sau đó trong dữ liệu Decoder đã giải mã
-(`uri_decoded`, `text_decoded`, `body_decoded`) — ví dụ `%27%20OR%201%3D1` vẫn khớp
-`content:"' OR 1=1"`. `to_server` = chiều forward của flow (phía khởi tạo kết nối);
-`established` = TCP `ESTABLISHED`/`CLOSING`, UDP khi đã thấy cả hai chiều.
+Bộ rule mẫu `rules/local.rules` phát hiện: directory traversal, SQL injection, XSS,
+truy cập `/etc/passwd`, quét SYN/NULL/XMAS, truy vấn DNS tên miền `.xyz`, lệnh SMTP `EXPN`.
 
-### Testcases
+## Cấu trúc thư mục
 
-Mỗi testcase là 1 folder trong `TEST/Bai-tap-02/` — tái hiện được bằng 2 lệnh:
-
-```bash
-.venv/bin/python TEST/Bai-tap-02/T0x_<Tên>/gen_input.py   # sinh input.pcap
-.venv/bin/python src/main.py --pcap TEST/Bai-tap-02/T0x_<Tên>/input.pcap \
-    --count 20 --output TEST/Bai-tap-02/T0x_<Tên>/output.jsonl
+```
+src/        mã nguồn (bảng Thành phần ở trên)
+rules/      local.rules (bộ rule mẫu), engine.json (cấu hình mặc định)
+assets/     sơ đồ kiến trúc (.png + .excalidraw)
+TEST/       testcase: input.pcap tái tạo được + kết quả thực tế + report.md
+docs/       tài liệu tham khảo cho các hướng phát triển
+test.py     công cụ trích packet theo protocol từ một PCAP lớn để làm testcase
 ```
 
-Nội dung mỗi folder:
-- `gen_input.py` – script sinh `input.pcap` (frame mô tả đúng case cần test)
-- `input.pcap` – input tái tạo được, timestamp cố định
-- `output.jsonl` – output thực tế của `main.py` trên input đó
-- `flows.jsonl` – flow record đã đóng (testcase flow T07–T13, chạy với `--flows`)
-- `report.md` – cách chạy, input là gì, bảng kết quả mong đợi
+`test.py` cần file `ultimate_wireshark_protocols_pcap_220213.pcap` (87 MB) ở thư mục
+gốc. File này không nằm trong git; tải riêng và đặt vào đó.
 
-`T15`–`T17` là testcase bổ sung: khóa flow khi port đổi chỗ, decode body
-HTTP form-urlencoded, chính sách skip theo cấu hình. Testcase 1 của Bài tập 1
-(TCP handshake) nằm trong `TEST/Bai-tap-01/Testcase1_TCP_Handshake/`.
+## Kiểm thử
 
-Testcase Bài tập 3 nằm trong `TEST/BT3/T01..T14`, cùng format; thêm `test.rules`
-(rule của testcase), `rules_report.jsonl`, `alerts.jsonl`, `trace.jsonl`, `engine.log`.
-Lệnh chạy nằm trong `report.md` của từng folder.
+Mỗi testcase là một thư mục có `gen_input.py` (sinh `input.pcap` với timestamp cố
+định), kết quả thực tế (`events.jsonl`, `flows.jsonl`, `alerts.jsonl`, `trace.jsonl`...)
+và `report.md` (lệnh chạy, input, kết quả mong đợi).
+
+| Thư mục | Kiểm thử phần |
+|---|---|
+| `TEST/Bai-tap-01/` | Capture & Parse: TCP handshake, HTTP, DNS, SMTP, protocol lạ, packet hỏng |
+| `TEST/Bai-tap-02/T01–T06, T14, T16, T17` | Decoder và Preprocessor: URL/HTML/MIME decode, chuẩn hóa, event hỏng, chính sách skip |
+| `TEST/Bai-tap-02/T07–T13, T15` | Flow Tracker: handshake, hai chiều, đóng kết nối, UDP, nhiều flow, timeout, thống kê |
+| `TEST/Bai-tap-03/T01–T06` | Nạp rule: loader, rule sai, keyword chưa hỗ trợ, header, chiều, index |
+| `TEST/Bai-tap-03/T07–T14` | So khớp: header, flow, content/nocase, offset/depth, distance/within, flags/dsize, nhiều rule, alert |
+
+Chạy lại một testcase:
+
+```bash
+.venv/bin/python TEST/Bai-tap-02/T01_HTTP_URL_Decode/gen_input.py
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T01_HTTP_URL_Decode/input.pcap \
+    -n 20 -l TEST/Bai-tap-02/T01_HTTP_URL_Decode
+```
+
+Lệnh cụ thể của từng testcase nằm trong `report.md` của thư mục đó.
+
+## Hướng phát triển
+
+Các hướng mở rộng tiếp theo (tham khảo thêm `docs/`):
+
+- Alert/Logging/Response: đọc `alerts.jsonl` để gửi thông báo hoặc chặn kết nối (IPS).
+- Mở rộng rule: `pcre`, `http_uri`, `byte_test`, ICMP, IPv6.
+- Tái hợp TCP stream để phát hiện tấn công trải trên nhiều packet.
 
 Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
 
-### AI Help
+## AI Help
 
 | Model | Mục đích | Phần mã dùng AI |
 |---|---|---|
 | `Big Pickle (OpenCode)` | Hỗ trợ xây dựng parser HTTP/DNS/SMTP | `src/parse_application.py`; `test.py` (script lọc packet phục vụ kiểm thử) |
 | `9router/cl/cline-free/mimo-v2.6-flash:high` (omp coding assistant) | Thiết kế pipeline Decoder → Preprocessor → Flow Tracker, scaffold schema section | `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`; phần ghép pipeline và field mới (`ip_length`, `payload_b64`, `smtp_body`) trong `src/main.py`, `src/parse_*.py` |
-| `Claude Opus 5.5 (Claude Code)` | Bài tập 3: thiết kế và viết Core Engine, testcase BT3; sửa lỗi mất payload HTTP/DNS ở transport parser; rà soát theo yêu cầu `docs/`, sửa lỗi gộp nhầm flow, thêm decode body form-urlencoded, thêm `--skip-unknown`/`--max-payload`, bổ sung testcase | `_key()` + kiểm tra TCP/UDP trong `track()` của `src/flow_tracker.py`, decode form body trong `src/decoder.py`, `CONFIG`/`configure()` trong `src/preprocessor.py`, `src/rule_loader.py`, `src/rule_parser.py`, `src/rule_repository.py`, `src/rule_matcher.py`, `src/engine.py`, `src/detection.py`, `context()` trong `src/flow_tracker.py`, phần CLI rule trong `src/main.py`, `_payload_bytes` trong `src/parse_transport.py`, `rules/`, `TEST/BT3/`, `TEST/Bai-tap-02/T15..T17`, `TEST/Bai-tap-01/Testcase1_TCP_Handshake/` |
+| `Claude Opus 5.5 (Claude Code)` | Core Engine và testcase của engine; sửa lỗi mất payload HTTP/DNS ở transport parser; sửa lỗi gộp nhầm flow, thêm decode body form-urlencoded, thêm chính sách `skip_unknown`/`max_payload`, bổ sung testcase; vẽ sơ đồ kiến trúc và viết lại README; audit và sửa lỗi (backtracking content, ghi flow khi đóng, chiều flow khi bắt giữa chừng, kết nối dùng lại port, URL mã hóa nhiều lớp, `-n` mặc định không giới hạn); sắp xếp lại `main.py` và rút gọn CLI theo kiểu Snort/Suricata | `_key()` + kiểm tra TCP/UDP trong `track()` của `src/flow_tracker.py`, decode form body trong `src/decoder.py`, `CONFIG`/`configure()` trong `src/preprocessor.py`, `src/rule_loader.py`, `src/rule_parser.py`, `src/rule_repository.py`, `src/rule_matcher.py`, `src/engine.py`, `src/detection.py`, `context()` trong `src/flow_tracker.py`, phần CLI rule trong `src/main.py`, `_payload_bytes` trong `src/parse_transport.py`, `rules/`, `TEST/Bai-tap-03/`, `TEST/Bai-tap-02/T15..T17`, `TEST/Bai-tap-01/Testcase1_TCP_Handshake/`, `_search`/`content_buffers` trong `src/rule_matcher.py`, `_client_is_dst`/`_expire`/`_close`/`flush` trong `src/flow_tracker.py`, `_percent_decode` trong `src/decoder.py`, `src/main.py`, `assets/`, `README.md` |

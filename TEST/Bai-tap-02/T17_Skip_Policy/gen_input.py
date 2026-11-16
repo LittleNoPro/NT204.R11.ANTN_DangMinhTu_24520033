@@ -1,4 +1,4 @@
-"""Sinh input.pcap cho T17 — chính sách skip theo cấu hình (--skip-unknown, --max-payload)."""
+"""Sinh input.pcap cho T17 — chính sách skip theo cấu hình (skip_unknown, max_payload trong config.json)."""
 import os
 
 from scapy.all import Ether, IP, TCP, UDP, Raw, PcapWriter
@@ -14,9 +14,9 @@ def http_get(path, sport):
 frames = [
     # 1. HTTP nhỏ, có "../" → hợp lệ, engine đánh giá và match sid 1000001
     http_get("/../etc", 40000),
-    # 2. HTTP payload lớn (path dài) cũng chứa "../" → vượt --max-payload → skip
+    # 2. HTTP payload lớn (path dài) cũng chứa "../" → vượt max_payload → skip
     http_get("/../" + "A" * 300, 40001),
-    # 3. UDP port lạ, application UNKNOWN → skip khi bật --skip-unknown
+    # 3. UDP port lạ, application UNKNOWN → skip khi bật skip_unknown
     Ether(src=MAC1, dst=MAC2) / IP(src="10.0.0.3", dst="10.0.0.4") /
     UDP(sport=5000, dport=9999) / Raw(b"hello"),
 ]

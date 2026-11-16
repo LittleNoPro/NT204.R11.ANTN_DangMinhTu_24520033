@@ -9,10 +9,9 @@ port **riêng rẽ**, nên `A:1000 → B:2000` và `A:2000 → B:1000` cho ra c�
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T15_Swapped_Ports/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T15_Swapped_Ports/input.pcap \
-    --count 20 --output TEST/Bai-tap-02/T15_Swapped_Ports/output.jsonl \
-    --flows TEST/Bai-tap-02/T15_Swapped_Ports/flows.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T15_Swapped_Ports/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T15_Swapped_Ports
 ```
 
 ## Input
@@ -25,7 +24,7 @@ port **riêng rẽ**, nên `A:1000 → B:2000` và `A:2000 → B:1000` cho ra c�
 
 ## Output
 
-- `output.jsonl` (4 event) + `flows.jsonl` (2 flow).
+- `events.jsonl` (4 event) + `flows.jsonl` (2 flow).
 
 ## Kết quả
 

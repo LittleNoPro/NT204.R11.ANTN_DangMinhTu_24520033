@@ -1,4 +1,4 @@
-# Bộ rule mẫu cho Core Engine (cú pháp Snort, phạm vi bài tập 3)
+# Bộ rule mặc định của IDS (cú pháp Snort)
 # Mỗi rule một dòng; dòng bắt đầu bằng '#' là comment.
 
 # --- HTTP ---

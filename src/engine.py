@@ -20,9 +20,9 @@ import rule_parser
 from rule_repository import RuleRepository
 
 
-def build_repository(rule_files=(), config_path=None):
+def build_repository(rule_files=(), config=None):
     """Loader → Parser/Validator → Repository. Trả về (repo, warnings)."""
-    config = rule_loader.load_config(config_path)
+    config = config or rule_loader.load_config(None)
     entries, warnings = rule_loader.load_rules(rule_files, config)
     repo = RuleRepository()
     disabled = set(config.get("disabled_sids", []))
@@ -36,9 +36,8 @@ def build_repository(rule_files=(), config_path=None):
 
 
 class RuleEngine:
-    def __init__(self, repository, skip_invalid=True):
+    def __init__(self, repository):
         self.repository = repository
-        self.skip_invalid = skip_invalid
         self.stats = Counter()
 
     def evaluate(self, event, flow_ctx):
@@ -46,7 +45,7 @@ class RuleEngine:
         trace = {"packet_id": event.get("packet_id"), "skipped": False,
                  "candidates": [], "results": []}
         action = (event.get("preprocess") or {}).get("processing_action")
-        if self.skip_invalid and action == "skip":
+        if action == "skip":
             self.stats["events_skipped"] += 1
             trace["skipped"] = True
             return [], trace
@@ -57,8 +56,9 @@ class RuleEngine:
         trace["candidates"] = [rule["sid"] for rule in candidates]
 
         detections = []
+        buffers = rule_matcher.content_buffers(event) if candidates else []
         for rule in candidates:
-            result = rule_matcher.match(rule, event, flow_ctx)
+            result = rule_matcher.match(rule, event, flow_ctx, buffers)
             trace["results"].append({k: result[k] for k in ("sid", "result", "stage", "reason")})
             if result["result"] == "MATCH":
                 self.stats["matches"] += 1

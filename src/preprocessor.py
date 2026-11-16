@@ -36,7 +36,7 @@ def new_section():
     return section
 
 
-# Chính sách xử lý, đặt từ CLI qua configure():
+# Chính sách xử lý, main.py đặt từ file cấu hình qua configure():
 # - skip_unknown: event có application protocol UNKNOWN → skip thay vì continue
 # - max_payload:  payload (byte) lớn hơn ngưỡng → partial + skip (None = không giới hạn)
 CONFIG = {"skip_unknown": False, "max_payload": None}

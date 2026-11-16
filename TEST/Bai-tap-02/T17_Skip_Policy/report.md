@@ -1,26 +1,25 @@
 # T17 — Chính sách skip theo cấu hình
 
-Testcase bổ sung cho yêu cầu chung của BT2: "giới hạn kích thước hoặc chính
-sách bỏ qua packet phải cấu hình được" và mục Missing/unsupported data
-"đánh dấu hoặc bỏ qua theo cấu hình".
+Kiểm tra chính sách bỏ qua packet cấu hình được: giới hạn kích thước payload
+(`max_payload`) và bỏ qua dữ liệu không nhận diện được protocol (`skip_unknown`),
+đặt trong `config.json` của testcase.
 
-| Tùy chọn | Mặc định | Tác dụng |
+| Khóa cấu hình | Mặc định | Tác dụng |
 |---|---|---|
-| `--skip-unknown` | tắt | event có application protocol `UNKNOWN` → `processing_action = skip` (mặc định chỉ đánh dấu `partial` + `continue`) |
-| `--max-payload N` | không giới hạn | payload lớn hơn N byte → `partial` + `skip`, `reason` ghi kích thước |
+| `"skip_unknown": true` | `false` | event có application protocol `UNKNOWN` → `processing_action = skip` (mặc định chỉ đánh dấu `partial` + `continue`) |
+| `"max_payload": N` | `null` (không giới hạn) | payload lớn hơn N byte → `partial` + `skip`, `reason` ghi kích thước |
 
-Event bị `skip` vẫn được ghi ra `output.jsonl` và vẫn được Flow Tracker đếm
-vào thống kê flow, nhưng Core Engine (BT3) không đánh giá rule trên event đó.
+Event bị `skip` vẫn được ghi ra `events.jsonl` và vẫn được Flow Tracker đếm
+vào thống kê flow, nhưng Core Engine không đánh giá rule trên event đó.
 
 ## Cách chạy
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T17_Skip_Policy/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T17_Skip_Policy/input.pcap \
-    --count 20 --output TEST/Bai-tap-02/T17_Skip_Policy/output.jsonl \
-    --skip-unknown --max-payload 200 \
-    --rules-config rules/engine.json --alerts TEST/Bai-tap-02/T17_Skip_Policy/alerts.jsonl \
+.venv/bin/python src/main.py -c TEST/Bai-tap-02/T17_Skip_Policy/config.json \
+    -r TEST/Bai-tap-02/T17_Skip_Policy/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T17_Skip_Policy \
     2> TEST/Bai-tap-02/T17_Skip_Policy/engine.log
 ```
 
@@ -33,7 +32,7 @@ vào thống kê flow, nhưng Core Engine (BT3) không đánh giá rule trên ev
 
 ## Output
 
-- `output.jsonl` (3 event), `alerts.jsonl` (Detection Event), `engine.log` (thống kê engine).
+- `events.jsonl` (3 event), `alerts.jsonl` (Detection Event), `engine.log` (thống kê engine).
 
 ## Kết quả
 

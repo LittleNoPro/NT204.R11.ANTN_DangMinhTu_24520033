@@ -14,8 +14,14 @@ env/
 # OS
 .DS_Store
 Thumbs.db
-# Scratch (bai-tap-02)
+# File tạm khi chạy thử
 /output.jsonl
 /extracted.pcap
 .verify/
 /GUIDE.md
+
+# PCAP lớn dùng cho test.py — tải riêng, không commit
+/ultimate_wireshark_protocols_pcap_220213.pcap
+
+# Thư mục log mặc định của IDS
+/logs/

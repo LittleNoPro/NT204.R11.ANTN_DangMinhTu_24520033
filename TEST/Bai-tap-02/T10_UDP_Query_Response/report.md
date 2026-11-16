@@ -4,10 +4,9 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T10_UDP_Query_Response/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T10_UDP_Query_Response/input.pcap \
-    --count 50 --output TEST/Bai-tap-02/T10_UDP_Query_Response/output.jsonl \
-    --flows TEST/Bai-tap-02/T10_UDP_Query_Response/flows.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T10_UDP_Query_Response/input.pcap \
+    -n 50 \
+    -l TEST/Bai-tap-02/T10_UDP_Query_Response
 ```
 
 ## Input
@@ -17,7 +16,7 @@
 
 ## Output
 
-- `output.jsonl` (2 event) + `flows.jsonl` (1 flow).
+- `events.jsonl` (2 event) + `flows.jsonl` (1 flow).
 
 ## Kết quả
 

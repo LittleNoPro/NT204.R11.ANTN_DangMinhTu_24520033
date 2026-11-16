@@ -24,7 +24,7 @@ SUPPORTED_PROTOCOLS = ("tcp", "udp", "ip")
 KNOWN_PROTOCOLS = ("tcp", "udp", "ip", "icmp")
 DIRECTIONS = ("->", "<>")
 
-# keyword trong phạm vi bài tập
+# keyword engine hỗ trợ
 SUPPORTED_KEYWORDS = {
     "msg", "sid", "rev", "classtype", "priority",
     "content", "nocase", "offset", "depth", "distance", "within",

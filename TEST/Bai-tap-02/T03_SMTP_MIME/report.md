@@ -6,11 +6,10 @@
 # 1. Sinh input.pcap (10 frame, timestamp cố định)
 .venv/bin/python TEST/Bai-tap-02/T03_SMTP_MIME/gen_input.py
 
-# 2. Chạy pipeline → output.jsonl (xem terminal + file kết quả)
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T03_SMTP_MIME/input.pcap \
-    --count 20 \
-    --output TEST/Bai-tap-02/T03_SMTP_MIME/output.jsonl
+# 2. Chạy pipeline → events.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T03_SMTP_MIME/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T03_SMTP_MIME
 ```
 
 ## Input
@@ -22,7 +21,7 @@
 
 ## Output
 
-- `output.jsonl` — 10 event, quan tâm `decoder.body_decoded` /
+- `events.jsonl` — 10 event, quan tâm `decoder.body_decoded` /
   `decode_method` / `decode_status` / `decode_reason`.
 
 ## Kết quả

@@ -4,10 +4,9 @@
 
 ```bash
 .venv/bin/python TEST/Bai-tap-02/T06_Missing_Field/gen_input.py
-.venv/bin/python src/main.py \
-    --pcap TEST/Bai-tap-02/T06_Missing_Field/input.pcap \
-    --count 20 \
-    --output TEST/Bai-tap-02/T06_Missing_Field/output.jsonl
+.venv/bin/python src/main.py -r TEST/Bai-tap-02/T06_Missing_Field/input.pcap \
+    -n 20 \
+    -l TEST/Bai-tap-02/T06_Missing_Field
 ```
 
 ## Input
@@ -18,7 +17,7 @@
 
 ## Output
 
-- `output.jsonl` — 5 event, quan tâm `preprocess` + section khác còn `null`.
+- `events.jsonl` — 5 event, quan tâm `preprocess` + section khác còn `null`.
 
 ## Kết quả
 
