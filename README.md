@@ -242,7 +242,6 @@ Các hướng mở rộng tiếp theo (tham khảo thêm `docs/`):
 - Mở rộng rule: `pcre`, `http_uri`, `byte_test`, ICMP, IPv6.
 - Tái hợp TCP stream để phát hiện tấn công trải trên nhiều packet.
 
-Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
 
 ## AI Usage
 
