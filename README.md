@@ -1,16 +1,14 @@
-# IDS viết bằng Python
+# Python Signature-based IDS
 
 Hệ thống phát hiện xâm nhập (IDS) dựa trên chữ ký: bắt packet từ card mạng hoặc
 file PCAP, phân tích và giải mã nội dung, theo dõi từng kết nối, rồi so với bộ rule
 cú pháp Snort để sinh cảnh báo. Mọi kết quả được ghi ra file JSON Lines để công cụ
 khác (SIEM, script, `jq`) đọc tiếp.
 
-## Kiến trúc
+## Architecture
 
 ![IDS Architecture](assets/architecture.png)
 
-> File gốc để chỉnh sửa: [`assets/architecture.excalidraw`](assets/architecture.excalidraw)
-> (mở bằng [excalidraw.com](https://excalidraw.com)).
 
 Hệ thống có hai luồng:
 
@@ -20,7 +18,7 @@ rule hợp lệ theo protocol + port để tra nhanh.
 
 **Với mỗi packet (nét liền, đánh số):**
 
-| Bước | Thành phần | Việc làm |
+| Step | Component | Responsibility |
 |---|---|---|
 | 1–2 | **Capture & Parse** | Scapy bắt packet; tách IP (L3), TCP/UDP/ICMP (L4), HTTP/DNS/SMTP (L7) thành một **event** dạng JSON |
 | 3 | **Decoder** | Giải mã dữ liệu bị ngụy trang: URL `%27` (kể cả mã hóa nhiều lớp `%2527`), HTML entity, Base64, Quoted-Printable, form body |
@@ -33,7 +31,7 @@ rule hợp lệ theo protocol + port để tra nhanh.
 Song song đó, mọi event được ghi vào `events.jsonl`, và mỗi kết nối được ghi vào
 `flows.jsonl` ngay khi nó đóng (kết nối còn mở được ghi lúc chương trình kết thúc).
 
-### Vì sao chia như vậy
+### Design Rationale
 
 - **Decoder đứng trước Engine:** kẻ tấn công thường mã hóa payload. `%27%20OR%201%3D1`
   chỉ khớp rule `content:"' OR 1=1"` sau khi được giải mã. Matcher tìm content
@@ -52,9 +50,9 @@ Song song đó, mọi event được ghi vào `events.jsonl`, và mỗi kết n�
   RAM; việc tìm content ghi nhớ các lần thử thất bại nên payload do kẻ tấn công dựng
   không làm engine đứng.
 
-## Thành phần và mã nguồn
+## Components
 
-| Thành phần | File | Ghi chú |
+| Component | File | Notes |
 |---|---|---|
 | CLI, capture, ghép pipeline | `src/main.py` | Gọi lần lượt các module, ghi file đầu ra |
 | Parser L3 / L4 / L7 | `src/parse_network.py`, `parse_transport.py`, `parse_application.py` | IPv4/IPv6; TCP/UDP/ICMP; HTTP/DNS/SMTP |
@@ -68,7 +66,7 @@ Song song đó, mọi event được ghi vào `events.jsonl`, và mỗi kết n�
 | Matching Engine | `src/rule_matcher.py` | `MATCH / NO_MATCH` + bước bị loại + lý do |
 | Alert Generator | `src/detection.py` | Alert theo schema cố định |
 
-## Cài đặt và chạy
+## Getting Started
 
 Yêu cầu Python 3 và Scapy.
 
@@ -91,10 +89,10 @@ sudo .venv/bin/python src/main.py -i eth0 -c rules/engine.json -l /var/log/ids
 .venv/bin/python src/main.py -T -c rules/engine.json
 ```
 
-| Tùy chọn | Ý nghĩa |
+| Option | Description |
 |---|---|
 | `-r PCAP` / `-i IFACE` | Đọc file PCAP hoặc bắt trực tiếp trên card mạng |
-| `-c CONFIG` | File cấu hình: rule, biến, timeout, chính sách (xem mục Cấu hình) |
+| `-c CONFIG` | File cấu hình: rule, biến, timeout, chính sách (xem mục Configuration) |
 | `-s RULES` | Nạp thêm file `.rules`, lặp lại được |
 | `-l DIR` | Thư mục log, mặc định `logs/` |
 | `-n N` | Dừng sau N packet, mặc định không giới hạn |
@@ -103,11 +101,11 @@ sudo .venv/bin/python src/main.py -i eth0 -c rules/engine.json -l /var/log/ids
 
 Cảnh báo khi nạp rule và thống kê engine được in ra stderr.
 
-## Đầu ra
+## Output
 
 Mọi file nằm trong thư mục log (`-l`):
 
-| File | Mỗi dòng là |
+| File | One line per |
 |---|---|
 | `events.jsonl` | Một packet đã xử lý (event) |
 | `alerts.jsonl` | Một lần rule khớp (khi có rule) |
@@ -117,7 +115,7 @@ Mọi file nằm trong thư mục log (`-l`):
 
 **Event** gồm 7 phần, mỗi phần do một module điền:
 
-| Phần | Module | Nội dung chính |
+| Section | Module | Content |
 |---|---|---|
 | `packet_id`, `timestamp` | `main.py` | Thứ tự và thời điểm packet |
 | `network` | parser L3 | `src_ip`, `dst_ip`, `ttl`, `ip_length` |
@@ -144,7 +142,7 @@ Thiếu dữ liệu thì field là `null`, list là `[]`.
 `match` cho biết rule khớp ở đâu: content nào, trong vùng dữ liệu nào (`payload`
 hay `uri_decoded`...), ở vị trí nào.
 
-## Viết rule
+## Writing Rules
 
 Rule dùng cú pháp Snort, mỗi rule một dòng (hoặc nối dòng bằng `\`):
 
@@ -152,7 +150,7 @@ Rule dùng cú pháp Snort, mỗi rule một dòng (hoặc nối dòng bằng `\
 alert tcp any any -> any $HTTP_PORTS (msg:"SQL injection OR 1=1"; flow:to_server,established; content:"' OR 1=1"; nocase; sid:1000002; rev:1;)
 ```
 
-| Phần | Hỗ trợ |
+| Part | Supported |
 |---|---|
 | Action | `alert` |
 | Protocol | `tcp`, `udp`, `ip` |
@@ -166,7 +164,7 @@ Rule dùng tính năng chưa hỗ trợ (`pcre`, `byte_test`, `icmp`, action `dr
 đánh dấu `unsupported` và bỏ qua; rule sai cú pháp bị đánh dấu `invalid`. Cả hai chỉ
 sinh cảnh báo, không làm dừng hệ thống.
 
-## Cấu hình
+## Configuration
 
 Mọi thiết lập nằm trong một file JSON truyền bằng `-c` (bản mặc định: `rules/engine.json`).
 Không có `-c` thì IDS chạy không rule, với timeout và chính sách mặc định như bên dưới.
@@ -183,7 +181,7 @@ Không có `-c` thì IDS chạy không rule, với timeout và chính sách mặ
 }
 ```
 
-| Khóa | Ý nghĩa |
+| Key | Description |
 |---|---|
 | `rule_files` | File rule cần nạp (đường dẫn tính từ thư mục chứa file cấu hình), bật/tắt từng file |
 | `disabled_sids` | Tắt từng rule theo `sid` |
@@ -198,10 +196,10 @@ Khóa bỏ trống thì dùng giá trị mặc định ở trên. Khóa sai tên
 Bộ rule mẫu `rules/local.rules` phát hiện: directory traversal, SQL injection, XSS,
 truy cập `/etc/passwd`, quét SYN/NULL/XMAS, truy vấn DNS tên miền `.xyz`, lệnh SMTP `EXPN`.
 
-## Cấu trúc thư mục
+## Project Structure
 
 ```
-src/        mã nguồn (bảng Thành phần ở trên)
+src/        mã nguồn (bảng Components ở trên)
 rules/      local.rules (bộ rule mẫu), engine.json (cấu hình mặc định)
 assets/     sơ đồ kiến trúc (.png + .excalidraw)
 TEST/       testcase: input.pcap tái tạo được + kết quả thực tế + report.md
@@ -212,13 +210,13 @@ test.py     công cụ trích packet theo protocol từ một PCAP lớn để l
 `test.py` cần file `ultimate_wireshark_protocols_pcap_220213.pcap` (87 MB) ở thư mục
 gốc. File này không nằm trong git; tải riêng và đặt vào đó.
 
-## Kiểm thử
+## Testing
 
 Mỗi testcase là một thư mục có `gen_input.py` (sinh `input.pcap` với timestamp cố
 định), kết quả thực tế (`events.jsonl`, `flows.jsonl`, `alerts.jsonl`, `trace.jsonl`...)
 và `report.md` (lệnh chạy, input, kết quả mong đợi).
 
-| Thư mục | Kiểm thử phần |
+| Directory | Covers |
 |---|---|
 | `TEST/Bai-tap-01/` | Capture & Parse: TCP handshake, HTTP, DNS, SMTP, protocol lạ, packet hỏng |
 | `TEST/Bai-tap-02/T01–T06, T14, T16, T17` | Decoder và Preprocessor: URL/HTML/MIME decode, chuẩn hóa, event hỏng, chính sách skip |
@@ -236,7 +234,7 @@ Chạy lại một testcase:
 
 Lệnh cụ thể của từng testcase nằm trong `report.md` của thư mục đó.
 
-## Hướng phát triển
+## Roadmap
 
 Các hướng mở rộng tiếp theo (tham khảo thêm `docs/`):
 
@@ -246,9 +244,9 @@ Các hướng mở rộng tiếp theo (tham khảo thêm `docs/`):
 
 Quy tắc commit: 1 task = 1 commit, 1 testcase = 1 commit.
 
-## AI Help
+## AI Usage
 
-| Model | Mục đích | Phần mã dùng AI |
+| Model | Purpose | AI-assisted code |
 |---|---|---|
 | `Big Pickle (OpenCode)` | Hỗ trợ xây dựng parser HTTP/DNS/SMTP | `src/parse_application.py`; `test.py` (script lọc packet phục vụ kiểm thử) |
 | `9router/cl/cline-free/mimo-v2.6-flash:high` (omp coding assistant) | Thiết kế pipeline Decoder → Preprocessor → Flow Tracker, scaffold schema section | `src/decoder.py`, `src/preprocessor.py`, `src/flow_tracker.py`; phần ghép pipeline và field mới (`ip_length`, `payload_b64`, `smtp_body`) trong `src/main.py`, `src/parse_*.py` |
