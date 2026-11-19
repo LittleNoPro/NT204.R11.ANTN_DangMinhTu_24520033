@@ -1,0 +1,9 @@
+{"timestamp": 1763164800.0, "packet_id": 1, "sid": 4030001, "rev": 1, "msg": "Baseline valid event", "priority": 1, "classtype": "web-application-attack", "protocol": "TCP", "application_protocol": "HTTP", "src_ip": "10.0.0.5", "src_port": 52133, "dst_ip": "192.168.1.20", "dst_port": 80, "flow_id": "flow-0001"}
+{"timestamp": 1763164801.0, "packet_id": 2, "rev": 1, "msg": "Missing sid", "priority": 1, "protocol": "TCP", "src_ip": "10.0.0.5", "src_port": 52133, "dst_ip": "192.168.1.20", "dst_port": 80}
+{"packet_id": 3, "sid": 4030003, "msg": "Missing timestamp", "priority": 1, "protocol": "TCP", "src_ip": "10.0.0.5", "dst_ip": "192.168.1.20"}
+{"timestamp": 1763164803.0, "packet_id": 4, "sid": 4030004, "msg": "Invalid src_ip", "priority": 2, "protocol": "TCP", "src_ip": "10.0.0.300", "dst_ip": "192.168.1.20"}
+{"timestamp": 1763164804.0, "packet_id": 5, "sid": 4030005, "msg": "Missing protocol", "priority": 2, "src_ip": "10.0.0.5", "dst_ip": "192.168.1.20"}
+{"timestamp": 1763164805.0, "packet_id": 6, "sid": 4030006, "msg": "Bad optional fields", "priority": "high", "protocol": "tcp", "src_ip": "10.0.0.6", "src_port": 70000, "dst_ip": "192.168.1.21", "dst_port": 80}
+{"timestamp": "2025-11-15T00:00:06Z", "sid": 4030007, "protocol": "UDP", "src_ip": "10.0.0.7", "dst_ip": "192.168.1.53"}
+this is not json {
+[1, 2, 3]

@@ -174,7 +174,7 @@ class AlertManager:
         """Detection Event → (alert chưa có alert_id, None), hoặc (None, lý do)
         nếu bị từ chối."""
         if not isinstance(detection, dict):
-            return None, "detection event không phải object"
+            return None, f"detection event không phải object JSON ({type(detection).__name__})"
 
         timestamp = _timestamp(detection.get("timestamp"))
         if timestamp is None:

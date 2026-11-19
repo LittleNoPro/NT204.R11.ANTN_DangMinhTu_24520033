@@ -1,0 +1,10 @@
+2025-11-15T00:00:00Z [CRITICAL] A000001 [sid:4030001:1] "Baseline valid event" TCP 10.0.0.5:52133 -> 192.168.1.20:80
+[alert] rejected: sid thiếu hoặc sai: None
+[alert] rejected: timestamp thiếu hoặc sai: None
+[alert] rejected: IP thiếu hoặc sai: src_ip='10.0.0.300', dst_ip='192.168.1.20'
+[alert] rejected: protocol thiếu hoặc sai: None
+2025-11-15T00:00:05Z [LOW] A000002 [sid:4030006:1] "Bad optional fields" TCP 10.0.0.6 -> 192.168.1.21:80
+2025-11-15T00:00:06Z [LOW] A000003 [sid:4030007:1] "sid:4030007" UDP 10.0.0.7 -> 192.168.1.53
+[alert] rejected: detection event không phải object JSON (str)
+[alert] rejected: detection event không phải object JSON (list)
+[alert] {'received': 9, 'alert': 3, 'rejected': 6}

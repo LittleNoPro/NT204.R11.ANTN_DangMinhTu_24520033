@@ -12,6 +12,7 @@ Ví dụ:
     python src/main.py -r capture.pcap -c rules/engine.json -l logs
     sudo python src/main.py -i eth0 -c rules/engine.json
     python src/main.py -T -c rules/engine.json
+    python src/main.py -D logs/detections.jsonl -c rules/engine.json -l retune
 """
 
 import argparse
@@ -88,6 +89,46 @@ def open_store(args, config):
     return AlertStore(path)
 
 
+def open_alerting(args, config, files):
+    """Alert Module: Alert Manager + Alert Repository + fast.log.
+    Trả về (raise_alert, manager); raise_alert(detection) xử lý một Detection Event."""
+    fast_log = files.enter_context(
+        open(os.path.join(args.log_dir, "fast.log"), "w", encoding="utf-8"))
+    store = files.enter_context(open_store(args, config))
+    manager = AlertManager(config["alert"], next_id=store.next_id())
+
+    def raise_alert(detection):                         # 11. Detection Event → alert
+        status, alert, reason = manager.process(detection)
+        if status in ("alert", "aggregated"):
+            store.save(alert)
+        else:                                           # rejected | filtered
+            store.discard(status, reason, alert or detection)
+        if status == "alert":
+            line = fast_line(alert)
+            fast_log.write(line + "\n")
+            if args.verbose:
+                print(line, file=sys.stderr)
+        elif status == "rejected" and args.verbose:
+            print(f"[alert] rejected: {reason}", file=sys.stderr)
+
+    return raise_alert, manager
+
+
+def replay_detections(path, raise_alert):
+    """Đưa Detection Event đã lưu (JSON Lines) qua Alert Module, không cần packet:
+    dùng để chỉnh lại severity/lọc/gom nhóm trên dữ liệu cũ. Dòng không phải JSON
+    hợp lệ vẫn được chuyển vào để bị từ chối kèm lý do, không làm dừng chương trình."""
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            try:
+                detection = json.loads(line)
+            except ValueError:
+                detection = line.strip()
+            raise_alert(detection)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="IDS dựa trên rule cú pháp Snort. Thiết lập chi tiết nằm trong file cấu hình (-c).")
@@ -95,6 +136,8 @@ def parse_args():
     source.add_argument("-i", dest="interface", metavar="IFACE",
                         help="bắt trực tiếp trên card mạng (cần root)")
     source.add_argument("-r", dest="pcap", metavar="PCAP", help="đọc từ file PCAP")
+    source.add_argument("-D", dest="detections", metavar="JSONL",
+                        help="đọc Detection Event đã lưu, chỉ chạy Alert Module")
     parser.add_argument("-c", dest="config", metavar="CONFIG",
                         help="file cấu hình JSON: rule, biến, timeout, chính sách (vd rules/engine.json)")
     parser.add_argument("-s", dest="rules", metavar="RULES", action="append", default=[],
@@ -108,8 +151,8 @@ def parse_args():
     parser.add_argument("-v", dest="verbose", action="store_true",
                         help="in alert ra console, ghi thêm trace.jsonl và rules_report.jsonl")
     args = parser.parse_args()
-    if not (args.interface or args.pcap or args.test):
-        parser.error("cần -i, -r hoặc -T")
+    if not (args.interface or args.pcap or args.detections or args.test):
+        parser.error("cần -i, -r, -D hoặc -T")
     return args
 
 
@@ -122,6 +165,16 @@ def main():
     preprocessor.configure(skip_unknown=config["skip_unknown"],
                            max_payload=config["max_payload"])
     os.makedirs(args.log_dir, exist_ok=True)
+
+    if args.detections:
+        with contextlib.ExitStack() as files:
+            raise_alert, manager = open_alerting(args, config, files)
+            try:
+                replay_detections(args.detections, raise_alert)
+            except OSError as error:
+                sys.exit(f"[detections] không đọc được {args.detections}: {error.strerror}")
+        print(f"[alert] {dict(manager.stats)}", file=sys.stderr)
+        return
 
     rule_engine = load_rules(args, config)
     if args.test:
@@ -137,10 +190,9 @@ def main():
         events = open_log("events.jsonl")
         flows = open_log("flows.jsonl")
         detections_log = open_log("detections.jsonl") if rule_engine else None
-        fast_log = open_log("fast.log") if rule_engine else None
         trace = open_log("trace.jsonl") if rule_engine and args.verbose else None
-        store = files.enter_context(open_store(args, config)) if rule_engine else None
-        alert_manager = AlertManager(config["alert"], next_id=store.next_id()) if store else None
+        if rule_engine:
+            raise_alert, alert_manager = open_alerting(args, config, files)
 
         def write_flow(flow):
             flows.write(dumps(flow) + "\n")
@@ -151,23 +203,11 @@ def main():
                                            on_close=write_flow)
         packet_ids = itertools.count(1)
 
-        def raise_alert(detection):                     # 11. Detection Event → alert
-            detections_log.write(dumps(detection) + "\n")
-            status, alert, reason = alert_manager.process(detection)
-            if status in ("alert", "aggregated"):
-                store.save(alert)
-            else:                                       # rejected | filtered
-                store.discard(status, reason, alert or detection)
-            if status == "alert":
-                line = fast_line(alert)
-                fast_log.write(line + "\n")
-                if args.verbose:
-                    print(line, file=sys.stderr)
-
         def handle(packet):
             event, detections, evaluation = process_packet(packet, next(packet_ids),
                                                            tracker, rule_engine)
             for detection in detections:
+                detections_log.write(dumps(detection) + "\n")
                 raise_alert(detection)
             if trace:
                 trace.write(dumps(evaluation) + "\n")
