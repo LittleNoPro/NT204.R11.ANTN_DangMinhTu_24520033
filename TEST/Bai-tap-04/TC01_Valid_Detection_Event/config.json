@@ -1,0 +1,10 @@
+{
+  "rule_files": ["test.rules"],
+  "alert": {
+    "severity_map": {"1": "CRITICAL", "2": "HIGH", "3": "MEDIUM", "4": "LOW"},
+    "min_severity": "LOW",
+    "suppress": [],
+    "aggregation": {"enabled": true, "window": 60},
+    "storage": {"type": "sqlite", "path": null}
+  }
+}

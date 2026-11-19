@@ -1,0 +1,4 @@
+# TC01 — Detection Event hợp lệ: 3 rule, 3 priority khác nhau
+alert tcp any any -> any 80 (msg:"Directory traversal"; flow:to_server,established; content:"../"; classtype:web-application-attack; priority:1; sid:4010001; rev:1;)
+alert tcp any any -> any 80 (msg:"SQL injection OR 1=1"; content:"' OR 1=1"; classtype:web-application-attack; priority:2; sid:4010002; rev:2;)
+alert udp any any -> any 53 (msg:"DNS query malware domain"; content:"malware"; classtype:trojan-activity; priority:3; sid:4010003; rev:1;)

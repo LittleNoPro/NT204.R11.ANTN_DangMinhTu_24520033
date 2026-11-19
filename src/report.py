@@ -5,6 +5,7 @@ Chỉ đọc alert đã lưu (alerts.db), không cần packet hay rule. Kết qu
 - báo cáo JSON ghi ra file (cho máy đọc, mặc định <thư mục log>/report.json)
 
 Hai bản dựng từ cùng một dict nên số liệu luôn khớp nhau.
+Với -a, in thẳng các Alert Object khớp truy vấn (JSON Lines) thay cho báo cáo.
 
 "alerts" là số alert (sau aggregation); "events" là tổng count, tức số
 Detection Event thật. Bảng Top-N xếp theo events.
@@ -13,6 +14,7 @@ Ví dụ:
     python src/report.py -c rules/engine.json -l logs
     python src/report.py -c rules/engine.json --from 2026-11-15 --to "2026-11-16 23:59"
     python src/report.py -c rules/engine.json --from 2026-11-15 --severity HIGH --src 10.0.0.5
+    python src/report.py -c rules/engine.json -a --sid 100001 > alerts.jsonl
 """
 
 import argparse
@@ -162,6 +164,8 @@ def parse_args():
     parser.add_argument("-n", dest="top_n", metavar="N", type=int, help="số dòng Top-N (ghi đè report.top_n)")
     parser.add_argument("--bucket", choices=BUCKETS, default="hour",
                         help="chia alert theo giờ hoặc phút (mặc định: hour)")
+    parser.add_argument("-a", dest="list_alerts", action="store_true",
+                        help="in danh sách alert khớp truy vấn (JSON Lines) thay cho báo cáo")
     parser.add_argument("-o", dest="output", metavar="FILE",
                         help="file báo cáo JSON (mặc định: <thư mục log>/report.json)")
     args = parser.parse_args()
@@ -189,6 +193,10 @@ def main():
         print(f"[report] chưa có {db_path}, báo cáo rỗng", file=sys.stderr)
         alerts = []
 
+    if args.list_alerts:
+        for alert in alerts:
+            print(json.dumps(alert, ensure_ascii=False))
+        return
     report = build_report(alerts, args.start, args.end, filters,
                           args.top_n or config["report"]["top_n"], args.bucket)
     print(render_text(report))
