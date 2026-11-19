@@ -1,0 +1,47 @@
+IDS SECURITY REPORT
+Period: 2025-11-15T00:00:00Z -> 2025-11-15T23:59:59Z (UTC)
+Total alerts: 10 (events: 20) | Critical: 3 | High: 5 | Medium: 2 | Low: 0
+Top SID: 1000011 (5) | Top source: 203.0.113.10 (15)
+
+Severity
+  CRITICAL                                     alerts=3     events=4
+  HIGH                                         alerts=5     events=13
+  MEDIUM                                       alerts=2     events=3
+  LOW                                          alerts=0     events=0
+
+Top SID
+  1000011  SCAN NULL scan                        alerts=1     events=5
+  1000012  SCAN XMAS scan                        alerts=1     events=5
+  1000001  WEB-ATTACKS directory traversal       alerts=2     events=3
+  1000020  DNS query for suspicious .xyz domain  alerts=2     events=3
+  1000002  WEB-ATTACKS SQL injection OR 1=1      alerts=1     events=1
+
+Classtype
+  attempted-recon                              alerts=4     events=12
+  web-application-attack                       alerts=4     events=5
+  bad-unknown                                  alerts=2     events=3
+
+Top source IP
+  203.0.113.10                                 alerts=7     events=15
+  192.168.1.50                                 alerts=2     events=3
+  198.51.100.7                                 alerts=1     events=2
+
+Top destination IP
+  192.168.1.20                                 alerts=6     events=14
+  192.168.1.53                                 alerts=2     events=3
+  192.168.1.21                                 alerts=1     events=2
+  192.168.1.25                                 alerts=1     events=1
+
+Transport protocol
+  TCP                                          alerts=8     events=17
+  UDP                                          alerts=2     events=3
+
+Application protocol
+  none                                         alerts=2     events=10
+  HTTP                                         alerts=5     events=6
+  DNS                                          alerts=2     events=3
+  SMTP                                         alerts=1     events=1
+
+Alerts per hour
+  2025-11-15T08:00:00Z                         alerts=7     events=16
+  2025-11-15T09:00:00Z                         alerts=3     events=4

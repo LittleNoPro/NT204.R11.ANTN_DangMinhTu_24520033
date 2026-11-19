@@ -129,8 +129,9 @@ def render_text(report):
         lines.extend(["", title])
         if not rows:
             lines.append("  (trống)")
+        width = max([44] + [len(label(row)) + 1 for row in rows])   # nhãn dài không lệch cột
         for row in rows:
-            lines.append(f"  {label(row):<44} alerts={row['alerts']:<5} events={row[key]}")
+            lines.append(f"  {label(row):<{width}} alerts={row['alerts']:<5} events={row[key]}")
 
     table("Severity", [{"name": s, **summary["severity"][s]} for s in SEVERITIES],
           lambda r: r["name"], "events")

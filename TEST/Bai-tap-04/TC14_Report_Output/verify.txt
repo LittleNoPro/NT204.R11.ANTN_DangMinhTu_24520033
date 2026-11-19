@@ -1,0 +1,21 @@
+OK   total_alerts: 10
+OK   total_events: 20
+OK   severity: {'CRITICAL': {'alerts': 3, 'events': 4}, 'HIGH': {'alerts': 5, 'events': 13}, 'MEDIUM': {'alerts': 2, 'events': 3}, 'LOW': {'alerts': 0, 'events': 0}}
+OK   top_sids (sid, events): [(1000011, 5), (1000012, 5), (1000001, 3), (1000020, 3), (1000002, 1)]
+OK   top_src_ips (events): [15, 3, 2]
+OK   top_dst_ips (events): [14, 3, 2, 1]
+OK   protocols: {'TCP': 17, 'UDP': 3}
+OK   timeline (giờ → events): {1763193600: 16, 1763197200: 4}
+OK   text: Total alerts / events: (10, 20)
+OK   text: phân bố severity: {'CRITICAL': 3, 'HIGH': 5, 'MEDIUM': 2, 'LOW': 0}
+OK   text: Period: Period: 2025-11-15T00:00:00Z -> 2025-11-15T23:59:59Z (UTC)
+OK   text: Top SID / Top source: (1000011, 5, '203.0.113.10', 15)
+OK   text: có mục 'Severity': True
+OK   text: có mục 'Top SID': True
+OK   text: có mục 'Classtype': True
+OK   text: có mục 'Top source IP': True
+OK   text: có mục 'Top destination IP': True
+OK   text: có mục 'Transport protocol': True
+OK   text: có mục 'Application protocol': True
+OK   text: có mục 'Alerts per hour': True
+PASS (20/20 mục)
