@@ -1,0 +1,136 @@
+{
+  "title": "IDS SECURITY REPORT",
+  "period": {
+    "from": "2025-11-15T00:00:00Z",
+    "to": "2025-11-15T23:59:59Z"
+  },
+  "filters": {},
+  "summary": {
+    "total_alerts": 8,
+    "total_events": 13,
+    "severity": {
+      "CRITICAL": {
+        "alerts": 2,
+        "events": 5
+      },
+      "HIGH": {
+        "alerts": 3,
+        "events": 4
+      },
+      "MEDIUM": {
+        "alerts": 1,
+        "events": 1
+      },
+      "LOW": {
+        "alerts": 2,
+        "events": 3
+      }
+    }
+  },
+  "top_sids": [
+    {
+      "sid": 4110001,
+      "msg": "Directory traversal",
+      "alerts": 2,
+      "events": 5
+    },
+    {
+      "sid": 4110002,
+      "msg": "SQL injection",
+      "alerts": 3,
+      "events": 4
+    },
+    {
+      "sid": 4110004,
+      "msg": "Suspicious user-agent",
+      "alerts": 2,
+      "events": 3
+    },
+    {
+      "sid": 4110003,
+      "msg": "Port scan",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "classtypes": [
+    {
+      "classtype": "attempted-recon",
+      "alerts": 8,
+      "events": 13
+    }
+  ],
+  "top_src_ips": [
+    {
+      "ip": "10.0.0.5",
+      "alerts": 3,
+      "events": 6
+    },
+    {
+      "ip": "10.0.0.7",
+      "alerts": 2,
+      "events": 2
+    },
+    {
+      "ip": "10.0.0.6",
+      "alerts": 1,
+      "events": 2
+    },
+    {
+      "ip": "10.0.0.8",
+      "alerts": 1,
+      "events": 2
+    },
+    {
+      "ip": "10.0.0.9",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "top_dst_ips": [
+    {
+      "ip": "192.168.1.20",
+      "alerts": 6,
+      "events": 10
+    },
+    {
+      "ip": "192.168.1.21",
+      "alerts": 1,
+      "events": 2
+    },
+    {
+      "ip": "192.168.1.22",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "protocols": [
+    {
+      "protocol": "TCP",
+      "alerts": 8,
+      "events": 13
+    }
+  ],
+  "application_protocols": [
+    {
+      "protocol": "HTTP",
+      "alerts": 8,
+      "events": 13
+    }
+  ],
+  "timeline": {
+    "bucket": "hour",
+    "rows": [
+      {
+        "time": "2025-11-15T00:00:00Z",
+        "alerts": 5,
+        "events": 8
+      },
+      {
+        "time": "2025-11-15T01:00:00Z",
+        "alerts": 3,
+        "events": 5
+      }
+    ]
+  }
+}

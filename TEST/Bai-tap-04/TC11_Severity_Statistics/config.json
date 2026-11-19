@@ -1,0 +1,6 @@
+{
+  "alert": {
+    "suppress": [{"sid": 4110005}],
+    "aggregation": {"enabled": true, "window": 60}
+  }
+}
