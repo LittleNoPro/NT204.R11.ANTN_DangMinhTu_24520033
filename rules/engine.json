@@ -17,5 +17,6 @@
     "suppress": [],
     "aggregation": {"enabled": true, "window": 60},
     "storage": {"type": "sqlite", "path": null}
-  }
+  },
+  "report": {"top_n": 5}
 }

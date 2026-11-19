@@ -27,7 +27,8 @@ File cấu hình của IDS (rules/engine.json, truyền bằng -c):
     ],
     "aggregation": {"enabled": true, "window": 60},  # gộp event cùng sid+src+dst trong N giây
     "storage": {"type": "sqlite", "path": null}       # null = <thư mục log>/alerts.db
-  }
+  },
+  "report": {"top_n": 5}       # số dòng trong các bảng Top-N của src/report.py
 }
 Đường dẫn trong rule_files tính tương đối theo thư mục chứa file cấu hình.
 """
@@ -55,6 +56,7 @@ DEFAULT_CONFIG = {
         "aggregation": {"enabled": True, "window": 60},
         "storage": {"type": "sqlite", "path": None},
     },
+    "report": {"top_n": 5},
 }
 
 
@@ -79,7 +81,7 @@ def load_config(path):
     Đường dẫn trong rule_files tính tương đối theo thư mục chứa file cấu hình.
     """
     config = {**DEFAULT_CONFIG, "flow_timeout": dict(DEFAULT_CONFIG["flow_timeout"]),
-              "alert": dict(DEFAULT_CONFIG["alert"])}
+              "alert": dict(DEFAULT_CONFIG["alert"]), "report": dict(DEFAULT_CONFIG["report"])}
     if not path:
         return config
     try:
@@ -102,6 +104,10 @@ def load_config(path):
     unknown = sorted(set(alert) - set(DEFAULT_CONFIG["alert"]))
     _check(not unknown, f"{path}: khóa không hợp lệ trong alert {unknown}")
     config["alert"].update(alert)
+    report = data.pop("report", {})
+    _check(isinstance(report, dict) and set(report) <= set(DEFAULT_CONFIG["report"]),
+           f'{path}: report phải là object chỉ gồm {list(DEFAULT_CONFIG["report"])}')
+    config["report"].update(report)
     config.update(data)
 
     _check(all(_is_number(v) and v > 0 for v in config["flow_timeout"].values()),
@@ -137,6 +143,9 @@ def load_config(path):
     _check(storage["path"] is None or (isinstance(storage["path"], str) and storage["path"]),
            f"{path}: alert.storage.path phải là đường dẫn hoặc null")
     config["alert"]["storage"] = storage
+    top_n = config["report"]["top_n"]
+    _check(isinstance(top_n, int) and not isinstance(top_n, bool) and top_n > 0,
+           f"{path}: report.top_n phải là số nguyên > 0")
 
     base = os.path.dirname(os.path.abspath(path))
     files = []
