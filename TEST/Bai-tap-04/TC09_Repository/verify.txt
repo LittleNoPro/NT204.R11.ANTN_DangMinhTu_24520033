@@ -1,0 +1,7 @@
+A000001  sid=4090001  20 trường  OK
+A000004  sid=4090001  20 trường  OK
+A000002  sid=4090002  20 trường  OK
+A000005  sid=4090002  20 trường  OK
+A000003  sid=4090003  20 trường  OK
+A000006  sid=4090003  20 trường  OK
+6 alert, 20 cột mỗi alert, alert_id duy nhất: PASS

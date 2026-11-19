@@ -1,0 +1,6 @@
+{
+  "rule_files": ["test.rules"],
+  "alert": {
+    "storage": {"type": "sqlite", "path": "TEST/Bai-tap-04/TC09_Repository/repo.db"}
+  }
+}

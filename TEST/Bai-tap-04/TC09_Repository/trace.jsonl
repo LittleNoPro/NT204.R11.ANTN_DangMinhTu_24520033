@@ -1,0 +1,6 @@
+{"packet_id": 1, "skipped": false, "candidates": [4090001, 4090003], "results": [{"sid": 4090001, "result": "NO_MATCH", "stage": "flow", "reason": "flow not established (state=HANDSHAKE)"}, {"sid": 4090003, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 2, "skipped": false, "candidates": [], "results": []}
+{"packet_id": 3, "skipped": false, "candidates": [4090001, 4090003], "results": [{"sid": 4090001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4090003, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 4, "skipped": false, "candidates": [4090001, 4090003], "results": [{"sid": 4090001, "result": "MATCH", "stage": null, "reason": null}, {"sid": 4090003, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 5, "skipped": false, "candidates": [4090002], "results": [{"sid": 4090002, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 6, "skipped": false, "candidates": [4090001, 4090003], "results": [{"sid": 4090001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4090003, "result": "MATCH", "stage": null, "reason": null}]}

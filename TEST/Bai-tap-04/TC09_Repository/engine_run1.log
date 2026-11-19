@@ -1,0 +1,6 @@
+[rules] {'valid': 3}
+2025-11-15T00:00:03Z [CRITICAL] A000001 [sid:4090001:3] "Directory traversal" TCP 10.0.0.5:52133 -> 192.168.1.20:80
+2025-11-15T00:00:04Z [HIGH] A000002 [sid:4090002:1] "DNS query malware domain" UDP 10.0.0.7:5353 -> 192.168.1.53:53
+2025-11-15T00:00:05Z [LOW] A000003 [sid:4090003:1] "SQL injection OR 1=1" TCP 10.0.0.6:40001 -> 192.168.1.21:80
+[engine] {'rules_loaded': 3, 'events_evaluated': 6, 'candidate_rules': 9, 'rejected_flow': 1, 'rejected_content': 5, 'matches': 3}
+[alert] {'received': 3, 'alert': 3}

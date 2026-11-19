@@ -1,0 +1,4 @@
+# TC09 — Repository: TCP và UDP, rule có và không có priority/classtype
+alert tcp any any -> any 80 (msg:"Directory traversal"; flow:to_server,established; content:"../"; classtype:web-application-attack; priority:1; sid:4090001; rev:3;)
+alert udp any any -> any 53 (msg:"DNS query malware domain"; content:"malware"; classtype:trojan-activity; priority:2; sid:4090002; rev:1;)
+alert tcp any any -> any 80 (msg:"SQL injection OR 1=1"; content:"' OR 1=1"; sid:4090003; rev:1;)
