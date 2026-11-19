@@ -1,0 +1,38 @@
+IDS SECURITY REPORT
+Period: 2025-11-15T00:00:00Z -> 2025-11-15T01:40:00Z (UTC)
+Total alerts: 10 (events: 17) | Critical: 0 | High: 10 | Medium: 0 | Low: 0
+Top SID: 4120001 (6) | Top source: 10.0.0.5 (7)
+
+Severity
+  CRITICAL                                     alerts=0     events=0
+  HIGH                                         alerts=10    events=17
+  MEDIUM                                       alerts=0     events=0
+  LOW                                          alerts=0     events=0
+
+Top SID
+  4120001  Brute force burst                   alerts=1     events=6
+  4120002  SQL injection                       alerts=4     events=4
+  4120003  Directory traversal                 alerts=2     events=4
+
+Classtype
+  web-application-attack                       alerts=10    events=17
+
+Top source IP
+  10.0.0.5                                     alerts=2     events=7
+  10.0.0.6                                     alerts=4     events=4
+  10.0.0.7                                     alerts=2     events=4
+
+Top destination IP
+  192.168.1.20                                 alerts=5     events=10
+  192.168.1.21                                 alerts=2     events=4
+  192.168.1.22                                 alerts=2     events=2
+
+Transport protocol
+  TCP                                          alerts=10    events=17
+
+Application protocol
+  HTTP                                         alerts=10    events=17
+
+Alerts per hour
+  2025-11-15T00:00:00Z                         alerts=6     events=13
+  2025-11-15T01:00:00Z                         alerts=4     events=4

@@ -1,0 +1,120 @@
+{
+  "title": "IDS SECURITY REPORT",
+  "period": {
+    "from": "2025-11-15T00:00:00Z",
+    "to": "2025-11-15T01:40:00Z"
+  },
+  "filters": {},
+  "summary": {
+    "total_alerts": 10,
+    "total_events": 17,
+    "severity": {
+      "CRITICAL": {
+        "alerts": 0,
+        "events": 0
+      },
+      "HIGH": {
+        "alerts": 10,
+        "events": 17
+      },
+      "MEDIUM": {
+        "alerts": 0,
+        "events": 0
+      },
+      "LOW": {
+        "alerts": 0,
+        "events": 0
+      }
+    }
+  },
+  "top_sids": [
+    {
+      "sid": 4120001,
+      "msg": "Brute force burst",
+      "alerts": 1,
+      "events": 6
+    },
+    {
+      "sid": 4120002,
+      "msg": "SQL injection",
+      "alerts": 4,
+      "events": 4
+    },
+    {
+      "sid": 4120003,
+      "msg": "Directory traversal",
+      "alerts": 2,
+      "events": 4
+    }
+  ],
+  "classtypes": [
+    {
+      "classtype": "web-application-attack",
+      "alerts": 10,
+      "events": 17
+    }
+  ],
+  "top_src_ips": [
+    {
+      "ip": "10.0.0.5",
+      "alerts": 2,
+      "events": 7
+    },
+    {
+      "ip": "10.0.0.6",
+      "alerts": 4,
+      "events": 4
+    },
+    {
+      "ip": "10.0.0.7",
+      "alerts": 2,
+      "events": 4
+    }
+  ],
+  "top_dst_ips": [
+    {
+      "ip": "192.168.1.20",
+      "alerts": 5,
+      "events": 10
+    },
+    {
+      "ip": "192.168.1.21",
+      "alerts": 2,
+      "events": 4
+    },
+    {
+      "ip": "192.168.1.22",
+      "alerts": 2,
+      "events": 2
+    }
+  ],
+  "protocols": [
+    {
+      "protocol": "TCP",
+      "alerts": 10,
+      "events": 17
+    }
+  ],
+  "application_protocols": [
+    {
+      "protocol": "HTTP",
+      "alerts": 10,
+      "events": 17
+    }
+  ],
+  "timeline": {
+    "bucket": "hour",
+    "rows": [
+      {
+        "time": "2025-11-15T00:00:00Z",
+        "alerts": 6,
+        "events": 13
+      },
+      {
+        "time": "2025-11-15T01:00:00Z",
+        "alerts": 4,
+        "events": 4
+      }
+    ]
+  }
+}

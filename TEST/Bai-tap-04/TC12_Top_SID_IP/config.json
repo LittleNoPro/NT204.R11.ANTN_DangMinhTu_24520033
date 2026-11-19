@@ -1,0 +1,6 @@
+{
+  "alert": {
+    "aggregation": {"enabled": true, "window": 60}
+  },
+  "report": {"top_n": 3}
+}
