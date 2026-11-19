@@ -1,0 +1,3 @@
+# TC06 — hai event khác nhau: khác sid, khác src_ip, khác dst_ip → alert riêng
+alert tcp any any -> any 80 (msg:"Directory traversal"; content:"../"; classtype:web-application-attack; priority:2; sid:4060001; rev:1;)
+alert tcp any any -> any 80 (msg:"Access to /etc/passwd"; content:"passwd"; classtype:web-application-attack; priority:1; sid:4060002; rev:1;)

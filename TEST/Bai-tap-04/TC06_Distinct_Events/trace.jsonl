@@ -1,0 +1,12 @@
+{"packet_id": 1, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 2, "skipped": false, "candidates": [], "results": []}
+{"packet_id": 3, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 4, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "MATCH", "stage": null, "reason": null}, {"sid": 4060002, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 5, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 6, "skipped": false, "candidates": [], "results": []}
+{"packet_id": 7, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 8, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "MATCH", "stage": null, "reason": null}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 9, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 10, "skipped": false, "candidates": [], "results": []}
+{"packet_id": 11, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}
+{"packet_id": 12, "skipped": false, "candidates": [4060001, 4060002], "results": [{"sid": 4060001, "result": "MATCH", "stage": null, "reason": null}, {"sid": 4060002, "result": "NO_MATCH", "stage": "content", "reason": "content not found"}]}

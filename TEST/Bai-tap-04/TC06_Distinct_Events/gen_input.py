@@ -1,0 +1,42 @@
+"""Sinh input.pcap cho TC06 — hai event khác nhau tạo alert/nhóm độc lập.
+
+Khóa gom nhóm là (sid, src_ip, dst_ip). Ba phiên HTTP trong vòng 12 giây (cùng một
+aggregation window), mỗi phiên khác phiên đầu đúng một thành phần của khóa:
+1. 10.0.0.5 → 192.168.1.20  GET /../etc/passwd  (khớp 2 SID: khác sid)
+2. 10.0.0.6 → 192.168.1.20  GET /../index.html  (khác src_ip)
+3. 10.0.0.5 → 192.168.1.21  GET /../index.html  (khác dst_ip)
+"""
+import os
+
+from scapy.all import Ether, IP, TCP, Raw, PcapWriter
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+MAC1, MAC2 = "02:00:00:00:00:01", "02:00:00:00:00:02"
+
+
+def tcp(src, sport, dst, dport, flags, data=b"", seq=1, ack=1):
+    pkt = (Ether(src=MAC1, dst=MAC2) / IP(src=src, dst=dst) /
+           TCP(sport=sport, dport=dport, flags=flags, seq=seq, ack=ack))
+    return pkt / Raw(load=data) if data else pkt
+
+
+def handshake_get(client, sport, server, path, host):
+    req = f"GET {path} HTTP/1.1\r\nHost: {host}\r\n\r\n".encode()
+    return [
+        tcp(client, sport, server, 80, "S", seq=1000, ack=0),
+        tcp(server, 80, client, sport, "SA", seq=7000, ack=1001),
+        tcp(client, sport, server, 80, "A", seq=1001, ack=7001),
+        tcp(client, sport, server, 80, "PA", req, seq=1001, ack=7001),
+    ]
+
+
+frames = (handshake_get("10.0.0.5", 52133, "192.168.1.20", "/../etc/passwd", "shop.example.com")
+          + handshake_get("10.0.0.6", 40001, "192.168.1.20", "/../index.html", "shop.example.com")
+          + handshake_get("10.0.0.5", 52134, "192.168.1.21", "/../index.html", "blog.example.com"))
+
+writer = PcapWriter(os.path.join(HERE, "input.pcap"), sync=True)
+for i, pkt in enumerate(frames):
+    pkt.time = 1763164800.0 + i      # 2025-11-15T00:00:00Z, timestamp cố định → tái tạo được
+    writer.write(pkt)
+writer.close()
+print("wrote", os.path.join(HERE, "input.pcap"), f"({len(frames)} frames)")
