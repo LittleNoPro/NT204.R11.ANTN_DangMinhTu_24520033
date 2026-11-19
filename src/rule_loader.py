@@ -25,7 +25,8 @@ File cấu hình của IDS (rules/engine.json, truyền bằng -c):
       {"sid": 100001, "src_ip": "10.0.0.0/8"},
       {"dst_ip": "192.168.1.53", "protocol": "UDP"}
     ],
-    "aggregation": {"enabled": true, "window": 60}   # gộp event cùng sid+src+dst trong N giây
+    "aggregation": {"enabled": true, "window": 60},  # gộp event cùng sid+src+dst trong N giây
+    "storage": {"type": "sqlite", "path": null}       # null = <thư mục log>/alerts.db
   }
 }
 Đường dẫn trong rule_files tính tương đối theo thư mục chứa file cấu hình.
@@ -52,6 +53,7 @@ DEFAULT_CONFIG = {
         "min_severity": "LOW",
         "suppress": [],
         "aggregation": {"enabled": True, "window": 60},
+        "storage": {"type": "sqlite", "path": None},
     },
 }
 
@@ -127,6 +129,14 @@ def load_config(path):
     _check(_is_number(aggregation["window"]) and aggregation["window"] > 0,
            f"{path}: alert.aggregation.window phải là số giây > 0")
     config["alert"]["aggregation"] = aggregation
+    storage = config["alert"]["storage"]
+    _check(isinstance(storage, dict) and set(storage) <= {"type", "path"},
+           f'{path}: alert.storage phải là object chỉ gồm "type" và "path"')
+    storage = {**DEFAULT_CONFIG["alert"]["storage"], **storage}
+    _check(storage["type"] == "sqlite", f'{path}: alert.storage.type chỉ hỗ trợ "sqlite"')
+    _check(storage["path"] is None or (isinstance(storage["path"], str) and storage["path"]),
+           f"{path}: alert.storage.path phải là đường dẫn hoặc null")
+    config["alert"]["storage"] = storage
 
     base = os.path.dirname(os.path.abspath(path))
     files = []
