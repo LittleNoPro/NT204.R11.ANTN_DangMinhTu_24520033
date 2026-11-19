@@ -7,6 +7,9 @@ người vận hành:
 - ánh xạ priority của rule sang severity theo cấu hình (alert.severity_map)
 - lọc: bỏ alert dưới alert.min_severity hoặc khớp một mục alert.suppress
   (theo sid, src_ip, dst_ip, protocol — giống suppress/threshold của Snort)
+- gom nhóm: Detection Event lặp lại cùng (sid, src_ip, dst_ip) trong
+  alert.aggregation.window giây được gộp vào một alert (count, first_seen,
+  last_seen) để hạn chế alert flooding
 
 Core Engine chỉ phát Detection Event; mọi quyết định về cảnh báo nằm ở đây.
 """
@@ -20,8 +23,9 @@ SEVERITY_RANK = {name: rank for rank, name in enumerate(SEVERITIES)}
 
 ALERT_SCHEMA = {
     "alert_id": None,
-    "timestamp": None,              # epoch giây (float), dùng để truy vấn
-    "time": None,                   # ISO 8601 UTC, để đọc
+    "first_seen": None,             # epoch giây của event đầu tiên trong nhóm
+    "last_seen": None,              # epoch giây của event mới nhất trong nhóm
+    "count": 1,                     # số Detection Event đã gộp vào alert này
     "sid": None, "rev": None, "msg": None,
     "severity": None, "priority": None, "classtype": None,
     "protocol": None,               # TCP | UDP | ICMP | ...
@@ -69,29 +73,61 @@ class AlertManager:
         self.severity_map = config["severity_map"]
         self.min_rank = SEVERITY_RANK[config["min_severity"]]
         self.suppress = config["suppress"]
+        aggregation = config["aggregation"]
+        self.window = aggregation["window"] if aggregation["enabled"] else None
+        self.groups = {}                # (sid, src_ip, dst_ip) → alert đang mở
+        self._next_sweep = None
         self._next_id = next_id
         self.stats = Counter()
 
     def process(self, detection):
         """Detection Event → (status, alert, reason).
 
-        status: alert (alert mới) | rejected (event hỏng) | filtered (bị lọc).
-        Alert bị lọc vẫn trả về để ghi nhận, nhưng không được cấp alert_id.
+        status:
+        - alert       alert mới, được cấp alert_id
+        - aggregated  gộp vào alert đang mở; trả về alert đó (cùng alert_id,
+                      count/last_seen đã cập nhật)
+        - filtered    bị lọc; không cấp alert_id
+        - rejected    event hỏng; alert = None
         """
         self.stats["received"] += 1
         alert, reason = self.build(detection)
         if alert is None:
             status = "rejected"
+        elif (reason := self.filter_reason(alert)):
+            status = "filtered"
         else:
-            reason = self.filter_reason(alert)
-            if reason:
-                status = "filtered"
-            else:
-                status = "alert"
-                alert["alert_id"] = f"A{self._next_id:06d}"
-                self._next_id += 1
+            status, alert = self._aggregate(alert)
         self.stats[status] += 1
         return status, alert, reason
+
+    def _aggregate(self, alert):
+        """Gộp vào nhóm đang mở nếu khoảng first_seen..last_seen sau khi thêm
+        event vẫn không vượt window (so theo giờ packet, không theo đồng hồ máy);
+        ngoài cửa sổ → mở alert mới."""
+        now = alert["first_seen"]
+        if self.window is not None:
+            self._expire(now)
+            key = (alert["sid"], alert["src_ip"], alert["dst_ip"])
+            group = self.groups.get(key)
+            if (group is not None
+                    and max(group["last_seen"], now) - min(group["first_seen"], now) <= self.window):
+                group["count"] += 1
+                group["first_seen"] = min(group["first_seen"], now)
+                group["last_seen"] = max(group["last_seen"], now)
+                return "aggregated", group
+            self.groups[key] = alert
+        alert["alert_id"] = f"A{self._next_id:06d}"
+        self._next_id += 1
+        return "alert", alert
+
+    def _expire(self, now):
+        """Bỏ nhóm đã hết cửa sổ khỏi bộ nhớ; quét tối đa 1 lần/giây."""
+        if self._next_sweep is not None and now < self._next_sweep:
+            return
+        self._next_sweep = now + 1
+        for key in [k for k, g in self.groups.items() if now - g["first_seen"] > self.window]:
+            del self.groups[key]
 
     def filter_reason(self, alert):
         """Lý do bỏ alert, hoặc None nếu giữ."""
@@ -157,8 +193,8 @@ class AlertManager:
         priority = optional("priority", lambda v: _is_int(v) and v > 0)
         alert = {
             **ALERT_SCHEMA,
-            "timestamp": timestamp,
-            "time": iso_time(timestamp),
+            "first_seen": timestamp,
+            "last_seen": timestamp,
             "sid": sid,
             "rev": optional("rev", lambda v: _is_int(v) and v > 0) or 1,
             "msg": optional("msg", lambda v: isinstance(v, str)) or f"sid:{sid}",

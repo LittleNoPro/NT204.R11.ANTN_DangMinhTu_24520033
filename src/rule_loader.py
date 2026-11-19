@@ -24,7 +24,8 @@ File cấu hình của IDS (rules/engine.json, truyền bằng -c):
       {"sid": 1000005},
       {"sid": 100001, "src_ip": "10.0.0.0/8"},
       {"dst_ip": "192.168.1.53", "protocol": "UDP"}
-    ]
+    ],
+    "aggregation": {"enabled": true, "window": 60}   # gộp event cùng sid+src+dst trong N giây
   }
 }
 Đường dẫn trong rule_files tính tương đối theo thư mục chứa file cấu hình.
@@ -50,6 +51,7 @@ DEFAULT_CONFIG = {
         "severity_map": {1: "CRITICAL", 2: "HIGH", 3: "MEDIUM", 4: "LOW"},
         "min_severity": "LOW",
         "suppress": [],
+        "aggregation": {"enabled": True, "window": 60},
     },
 }
 
@@ -116,6 +118,15 @@ def load_config(path):
     _check(config["alert"]["min_severity"] in SEVERITIES,
            f"{path}: alert.min_severity phải thuộc {list(SEVERITIES)}")
     config["alert"]["suppress"] = _suppress_list(config["alert"]["suppress"], path)
+    aggregation = config["alert"]["aggregation"]
+    _check(isinstance(aggregation, dict) and set(aggregation) <= {"enabled", "window"},
+           f'{path}: alert.aggregation phải là object chỉ gồm "enabled" và "window"')
+    aggregation = {**DEFAULT_CONFIG["alert"]["aggregation"], **aggregation}
+    _check(isinstance(aggregation["enabled"], bool),
+           f"{path}: alert.aggregation.enabled phải là true/false")
+    _check(_is_number(aggregation["window"]) and aggregation["window"] > 0,
+           f"{path}: alert.aggregation.window phải là số giây > 0")
+    config["alert"]["aggregation"] = aggregation
 
     base = os.path.dirname(os.path.abspath(path))
     files = []
