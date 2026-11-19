@@ -16,13 +16,18 @@ File cấu hình của IDS (rules/engine.json, truyền bằng -c):
   "variables": {"HOME_NET": "any", "HTTP_PORTS": "[80,8080]"},
   "flow_timeout": {"tcp": 300, "udp": 60},     # giây rảnh trước khi đóng flow
   "skip_unknown": false,     # không đánh giá event có protocol ứng dụng UNKNOWN
-  "max_payload": null        # không đánh giá payload lớn hơn N byte (null = không giới hạn)
+  "max_payload": null,       # không đánh giá payload lớn hơn N byte (null = không giới hạn)
+  "alert": {
+    "severity_map": {"1": "CRITICAL", "2": "HIGH", "3": "MEDIUM", "4": "LOW"}
+  }
 }
 Đường dẫn trong rule_files tính tương đối theo thư mục chứa file cấu hình.
 """
 
 import json
 import os
+
+from alert import SEVERITIES
 
 
 DEFAULT_CONFIG = {
@@ -32,6 +37,11 @@ DEFAULT_CONFIG = {
     "flow_timeout": {"tcp": 300, "udp": 60},
     "skip_unknown": False,
     "max_payload": None,
+    "alert": {
+        # priority của rule → severity; mỗi khóa là đầu một khoảng (4 = "4 trở lên"),
+        # rule không có priority lấy severity của khóa lớn nhất
+        "severity_map": {1: "CRITICAL", 2: "HIGH", 3: "MEDIUM", 4: "LOW"},
+    },
 }
 
 
@@ -55,7 +65,8 @@ def load_config(path):
     lọt sẽ làm Preprocessor lỗi trên mọi packet và IDS không đánh giá packet nào.
     Đường dẫn trong rule_files tính tương đối theo thư mục chứa file cấu hình.
     """
-    config = {**DEFAULT_CONFIG, "flow_timeout": dict(DEFAULT_CONFIG["flow_timeout"])}
+    config = {**DEFAULT_CONFIG, "flow_timeout": dict(DEFAULT_CONFIG["flow_timeout"]),
+              "alert": dict(DEFAULT_CONFIG["alert"])}
     if not path:
         return config
     try:
@@ -73,6 +84,11 @@ def load_config(path):
     _check(isinstance(timeouts, dict) and set(timeouts) <= {"tcp", "udp"},
            f'{path}: flow_timeout phải có dạng {{"tcp": giây, "udp": giây}}')
     config["flow_timeout"].update(timeouts)
+    alert = data.pop("alert", {})
+    _check(isinstance(alert, dict), f"{path}: alert phải là object")
+    unknown = sorted(set(alert) - set(DEFAULT_CONFIG["alert"]))
+    _check(not unknown, f"{path}: khóa không hợp lệ trong alert {unknown}")
+    config["alert"].update(alert)
     config.update(data)
 
     _check(all(_is_number(v) and v > 0 for v in config["flow_timeout"].values()),
@@ -87,6 +103,7 @@ def load_config(path):
            f"{path}: disabled_sids phải là danh sách số")
     _check(isinstance(config["variables"], dict), f"{path}: variables phải là object")
     _check(isinstance(config["rule_files"], list), f"{path}: rule_files phải là danh sách")
+    config["alert"]["severity_map"] = _severity_map(config["alert"]["severity_map"], path)
 
     base = os.path.dirname(os.path.abspath(path))
     files = []
@@ -101,6 +118,20 @@ def load_config(path):
         files.append({"path": rule_path, "enabled": item.get("enabled", True)})
     config["rule_files"] = files
     return config
+
+
+def _severity_map(mapping, path):
+    """{"1": "CRITICAL", ...} (khóa JSON là chuỗi) → {1: "CRITICAL", ...}."""
+    _check(isinstance(mapping, dict) and mapping,
+           f"{path}: alert.severity_map phải là object khác rỗng")
+    result = {}
+    for priority, severity in mapping.items():
+        _check(str(priority).isdigit() and int(priority) > 0,
+               f"{path}: alert.severity_map: priority {priority!r} phải là số nguyên > 0")
+        _check(severity in SEVERITIES,
+               f"{path}: alert.severity_map: {severity!r} không thuộc {list(SEVERITIES)}")
+        result[int(priority)] = severity
+    return result
 
 
 def read_rule_lines(path):

@@ -10,5 +10,8 @@
   },
   "flow_timeout": {"tcp": 300, "udp": 60},
   "skip_unknown": false,
-  "max_payload": null
+  "max_payload": null,
+  "alert": {
+    "severity_map": {"1": "CRITICAL", "2": "HIGH", "3": "MEDIUM", "4": "LOW"}
+  }
 }
