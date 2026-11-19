@@ -1,0 +1,94 @@
+{
+  "title": "IDS SECURITY REPORT",
+  "period": {
+    "from": "2025-11-15T00:00:03Z",
+    "to": "2025-11-15T00:00:07Z"
+  },
+  "filters": {},
+  "summary": {
+    "total_alerts": 3,
+    "total_events": 3,
+    "severity": {
+      "CRITICAL": {
+        "alerts": 0,
+        "events": 0
+      },
+      "HIGH": {
+        "alerts": 3,
+        "events": 3
+      },
+      "MEDIUM": {
+        "alerts": 0,
+        "events": 0
+      },
+      "LOW": {
+        "alerts": 0,
+        "events": 0
+      }
+    }
+  },
+  "top_sids": [
+    {
+      "sid": 4050003,
+      "msg": "HTTP GET to admin host",
+      "alerts": 2,
+      "events": 2
+    },
+    {
+      "sid": 4050002,
+      "msg": "PHP config request",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "classtypes": [
+    {
+      "classtype": "unknown",
+      "alerts": 3,
+      "events": 3
+    }
+  ],
+  "top_src_ips": [
+    {
+      "ip": "172.16.0.9",
+      "alerts": 2,
+      "events": 2
+    },
+    {
+      "ip": "10.0.0.5",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "top_dst_ips": [
+    {
+      "ip": "192.168.1.20",
+      "alerts": 3,
+      "events": 3
+    }
+  ],
+  "protocols": [
+    {
+      "protocol": "TCP",
+      "alerts": 3,
+      "events": 3
+    }
+  ],
+  "application_protocols": [
+    {
+      "protocol": "HTTP",
+      "alerts": 3,
+      "events": 3
+    }
+  ],
+  "timeline": {
+    "bucket": "hour",
+    "rows": [
+      {
+        "time": "2025-11-15T00:00:00Z",
+        "alerts": 3,
+        "events": 3
+      }
+    ]
+  }
+}

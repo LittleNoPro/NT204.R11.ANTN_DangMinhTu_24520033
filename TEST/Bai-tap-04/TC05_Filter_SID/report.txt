@@ -1,0 +1,33 @@
+IDS SECURITY REPORT
+Period: 2025-11-15T00:00:03Z -> 2025-11-15T00:00:07Z (UTC)
+Total alerts: 3 (events: 3) | Critical: 0 | High: 3 | Medium: 0 | Low: 0
+Top SID: 4050003 (2) | Top source: 172.16.0.9 (2)
+
+Severity
+  CRITICAL                                     alerts=0     events=0
+  HIGH                                         alerts=3     events=3
+  MEDIUM                                       alerts=0     events=0
+  LOW                                          alerts=0     events=0
+
+Top SID
+  4050003  HTTP GET to admin host              alerts=2     events=2
+  4050002  PHP config request                  alerts=1     events=1
+
+Classtype
+  unknown                                      alerts=3     events=3
+
+Top source IP
+  172.16.0.9                                   alerts=2     events=2
+  10.0.0.5                                     alerts=1     events=1
+
+Top destination IP
+  192.168.1.20                                 alerts=3     events=3
+
+Transport protocol
+  TCP                                          alerts=3     events=3
+
+Application protocol
+  HTTP                                         alerts=3     events=3
+
+Alerts per hour
+  2025-11-15T00:00:00Z                         alerts=3     events=3

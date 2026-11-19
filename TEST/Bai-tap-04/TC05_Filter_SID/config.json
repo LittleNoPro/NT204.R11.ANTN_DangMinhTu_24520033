@@ -1,0 +1,9 @@
+{
+  "rule_files": ["test.rules"],
+  "alert": {
+    "suppress": [
+      {"sid": 4050001},
+      {"sid": 4050002, "src_ip": "10.0.0.0/24"}
+    ]
+  }
+}

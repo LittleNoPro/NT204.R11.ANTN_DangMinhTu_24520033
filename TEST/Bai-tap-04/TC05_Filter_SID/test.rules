@@ -1,0 +1,4 @@
+# TC05 — lọc theo SID: cả 3 rule cùng priority 2 (HIGH) để loại trừ ảnh hưởng của lọc severity
+alert tcp any any -> any 80 (msg:"Admin path access"; content:"/admin/"; priority:2; sid:4050001; rev:1;)
+alert tcp any any -> any 80 (msg:"PHP config request"; content:"config.php"; priority:2; sid:4050002; rev:1;)
+alert tcp any any -> any 80 (msg:"HTTP GET to admin host"; content:"GET"; priority:2; sid:4050003; rev:1;)
