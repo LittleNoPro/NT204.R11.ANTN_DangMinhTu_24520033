@@ -1,0 +1,6 @@
+{
+  "rule_files": ["test.rules"],
+  "alert": {
+    "severity_map": {"1": "CRITICAL", "2": "HIGH", "3": "HIGH", "4": "MEDIUM", "6": "LOW"}
+  }
+}

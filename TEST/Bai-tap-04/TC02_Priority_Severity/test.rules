@@ -1,0 +1,8 @@
+# TC02 — Priority → severity: 7 rule cùng khớp một request, khác priority
+alert tcp any any -> any 80 (msg:"P1 admin config access"; content:"/admin/"; priority:1; sid:4020001; rev:1;)
+alert tcp any any -> any 80 (msg:"P2 php request"; content:".php"; priority:2; sid:4020002; rev:1;)
+alert tcp any any -> any 80 (msg:"P3 config keyword"; content:"config"; priority:3; sid:4020003; rev:1;)
+alert tcp any any -> any 80 (msg:"P4 GET request"; content:"GET"; priority:4; sid:4020004; rev:1;)
+alert tcp any any -> any 80 (msg:"P5 Host header"; content:"Host:"; priority:5; sid:4020005; rev:1;)
+alert tcp any any -> any 80 (msg:"P7 HTTP/1.1"; content:"HTTP/1.1"; priority:7; sid:4020007; rev:1;)
+alert tcp any any -> any 80 (msg:"No priority shop host"; content:"shop.example.com"; sid:4020009; rev:1;)
