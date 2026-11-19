@@ -1,2 +1,6 @@
 [rules] {'valid': 4}
+2023-11-14T22:13:20Z [LOW] A000001 [sid:3080003:1] "T08 GET khi chưa established" TCP 10.0.0.1:40000 -> 10.0.0.2:80
+2023-11-14T22:13:23Z [LOW] A000002 [sid:3080001:1] "T08 GET to_server established" TCP 10.0.0.1:40000 -> 10.0.0.2:80
+2023-11-14T22:13:24Z [LOW] A000003 [sid:3080002:1] "T08 response to_client established" TCP 10.0.0.2:80 -> 10.0.0.1:40000
 [engine] {'rules_loaded': 4, 'events_evaluated': 5, 'candidate_rules': 10, 'rejected_flow': 6, 'matches': 3, 'rejected_content': 1}
+[alert] {'received': 3, 'alert': 3}

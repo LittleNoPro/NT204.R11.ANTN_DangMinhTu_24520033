@@ -13,4 +13,6 @@
 [rules] warning: TEST/Bai-tap-03/T02_Invalid_Rule/test.rules:14: invalid rule (sid=3020013): flags requires protocol tcp
 [rules] warning: TEST/Bai-tap-03/T02_Invalid_Rule/test.rules:15: invalid rule (sid=None): undefined variable $UNKNOWN_NET
 [rules] {'valid': 1, 'invalid': 14}
+2023-11-14T22:13:23Z [LOW] A000001 [sid:3020100:1] "rule hợp lệ cuối file" TCP 10.0.0.1:40000 -> 10.0.0.2:80
 [engine] {'rules_loaded': 1, 'events_evaluated': 5, 'candidate_rules': 3, 'rejected_flow': 1, 'rejected_content': 1, 'matches': 1}
+[alert] {'received': 1, 'alert': 1}

@@ -2,8 +2,11 @@
 
 Luồng xử lý (số bước khớp với sơ đồ assets/architecture.png):
     khởi động   load_rules(): Rule Loader → Rule Parser → Rule Repository
-    mỗi packet  process_packet(): parse → decode → preprocess → flow → engine → alert
+    mỗi packet  process_packet(): parse → decode → preprocess → flow → engine
+                → Detection Event → Alert Manager (severity, lọc, gom) → Alert Repository
     kết thúc    đóng các flow còn mở, in thống kê
+
+Báo cáo từ Alert Repository: python src/report.py
 
 Ví dụ:
     python src/main.py -r capture.pcap -c rules/engine.json -l logs
@@ -28,6 +31,8 @@ import preprocessor
 import flow_tracker
 import engine
 import rule_loader
+from alert import AlertManager, fast_line
+from alert_store import AlertStore
 from rule_parser import public_view
 
 
@@ -71,6 +76,18 @@ def load_rules(args, config):
     return engine.RuleEngine(repo)
 
 
+def open_store(args, config):
+    """Alert Repository. Mặc định <thư mục log>/alerts.db: thuộc về lần chạy này
+    nên được tạo mới như các file log khác. storage.path đặt riêng thì là kho
+    dùng chung lâu dài: giữ alert cũ, alert_id đánh tiếp."""
+    path = config["alert"]["storage"]["path"]
+    if path is None:
+        path = os.path.join(args.log_dir, "alerts.db")
+        if os.path.exists(path):
+            os.remove(path)
+    return AlertStore(path)
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="IDS dựa trên rule cú pháp Snort. Thiết lập chi tiết nằm trong file cấu hình (-c).")
@@ -83,13 +100,13 @@ def parse_args():
     parser.add_argument("-s", dest="rules", metavar="RULES", action="append", default=[],
                         help="nạp thêm file .rules (lặp lại được)")
     parser.add_argument("-l", dest="log_dir", metavar="DIR", default="logs",
-                        help="thư mục ghi events/alerts/flows.jsonl (mặc định: logs)")
+                        help="thư mục ghi log và alerts.db (mặc định: logs)")
     parser.add_argument("-n", dest="count", metavar="N", type=int, default=0,
                         help="dừng sau N packet (mặc định: không giới hạn)")
     parser.add_argument("-T", dest="test", action="store_true",
                         help="chỉ nạp và kiểm tra rule rồi thoát")
     parser.add_argument("-v", dest="verbose", action="store_true",
-                        help="ghi thêm trace.jsonl và rules_report.jsonl để gỡ lỗi")
+                        help="in alert ra console, ghi thêm trace.jsonl và rules_report.jsonl")
     args = parser.parse_args()
     if not (args.interface or args.pcap or args.test):
         parser.error("cần -i, -r hoặc -T")
@@ -119,8 +136,11 @@ def main():
 
         events = open_log("events.jsonl")
         flows = open_log("flows.jsonl")
-        alerts = open_log("alerts.jsonl") if rule_engine else None
+        detections_log = open_log("detections.jsonl") if rule_engine else None
+        fast_log = open_log("fast.log") if rule_engine else None
         trace = open_log("trace.jsonl") if rule_engine and args.verbose else None
+        store = files.enter_context(open_store(args, config)) if rule_engine else None
+        alert_manager = AlertManager(config["alert"], next_id=store.next_id()) if store else None
 
         def write_flow(flow):
             flows.write(dumps(flow) + "\n")
@@ -131,11 +151,24 @@ def main():
                                            on_close=write_flow)
         packet_ids = itertools.count(1)
 
+        def raise_alert(detection):                     # 11. Detection Event → alert
+            detections_log.write(dumps(detection) + "\n")
+            status, alert, reason = alert_manager.process(detection)
+            if status in ("alert", "aggregated"):
+                store.save(alert)
+            else:                                       # rejected | filtered
+                store.discard(status, reason, alert or detection)
+            if status == "alert":
+                line = fast_line(alert)
+                fast_log.write(line + "\n")
+                if args.verbose:
+                    print(line, file=sys.stderr)
+
         def handle(packet):
             event, detections, evaluation = process_packet(packet, next(packet_ids),
                                                            tracker, rule_engine)
-            for alert in detections:                    # 11. ghi alert
-                alerts.write(dumps(alert) + "\n")
+            for detection in detections:
+                raise_alert(detection)
             if trace:
                 trace.write(dumps(evaluation) + "\n")
             events.write(dumps(event) + "\n")
@@ -148,6 +181,7 @@ def main():
 
     if rule_engine:
         print(f"[engine] {rule_engine.summary()}", file=sys.stderr)
+        print(f"[alert] {dict(alert_manager.stats)}", file=sys.stderr)
 
 
 if __name__ == "__main__":

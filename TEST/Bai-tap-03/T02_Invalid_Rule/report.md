@@ -20,7 +20,7 @@
 ## Output
 
 - `rules_report.jsonl` — Internal Rule Object + `status`/`reason` của từng rule.
-- `alerts.jsonl` — Detection Event (mỗi rule match 1 dòng).
+- `detections.jsonl` — Detection Event (mỗi rule match 1 dòng); `fast.log` — alert dạng ngắn.
 - `trace.jsonl` — mỗi event: `candidates` (sid lấy từ Indexer) và `results` (`MATCH`/`NO_MATCH` + `stage` bị loại).
 - `events.jsonl` — event đã qua parse, decode, preprocess và flow tracking. `engine.log` — cảnh báo khi nạp rule + thống kê engine.
 
@@ -42,4 +42,4 @@
 | 13 | `flags:SZ` | `invalid TCP flag(s) 'Z'` |
 | 14 | `flags` trong rule udp | `flags requires protocol tcp` |
 | 15 | `$UNKNOWN_NET` | `undefined variable $UNKNOWN_NET` |
-| — | engine | `{'valid': 1, 'invalid': 14}`; vẫn xử lý đủ 5 packet, rule 3020100 match frame 4 (GET) → 1 dòng trong `alerts.jsonl` |
+| — | engine | `{'valid': 1, 'invalid': 14}`; vẫn xử lý đủ 5 packet, rule 3020100 match frame 4 (GET) → 1 dòng trong `detections.jsonl` |

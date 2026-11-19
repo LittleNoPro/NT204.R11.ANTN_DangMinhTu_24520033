@@ -25,3 +25,6 @@ Thumbs.db
 
 # Thư mục log mặc định của IDS
 /logs/
+
+# Alert Repository (SQLite) sinh ra mỗi lần chạy; xem bằng src/report.py
+*.db

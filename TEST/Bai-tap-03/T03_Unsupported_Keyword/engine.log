@@ -8,4 +8,6 @@
 [rules] warning: TEST/Bai-tap-03/T03_Unsupported_Keyword/test.rules:9: unsupported rule (sid=None): unsupported flow option 'only_stream'
 [rules] warning: TEST/Bai-tap-03/T03_Unsupported_Keyword/test.rules:10: unsupported rule (sid=None): unsupported negated content
 [rules] {'valid': 1, 'unsupported': 9}
+2023-11-14T22:13:23Z [LOW] A000001 [sid:3030100:1] "metadata/reference được bỏ qua" TCP 10.0.0.1:40000 -> 10.0.0.2:80
 [engine] {'rules_loaded': 1, 'events_evaluated': 5, 'candidate_rules': 3, 'rejected_content': 2, 'matches': 1}
+[alert] {'received': 1, 'alert': 1}

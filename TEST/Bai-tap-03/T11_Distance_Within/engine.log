@@ -1,2 +1,5 @@
 [rules] {'valid': 2}
+2023-11-14T22:13:20Z [LOW] A000001 [sid:3110001:1] "T11 admin trong 10 byte sau user=" TCP 10.0.0.1:40000 -> 10.0.0.2:80
+2023-11-14T22:13:21Z [LOW] A000002 [sid:3110002:1] "T11 admin cách user= ít nhất 6 byte" TCP 10.0.0.1:40000 -> 10.0.0.2:80
 [engine] {'rules_loaded': 2, 'events_evaluated': 4, 'candidate_rules': 8, 'matches': 4, 'rejected_content': 4}
+[alert] {'received': 4, 'alert': 2, 'aggregated': 2}

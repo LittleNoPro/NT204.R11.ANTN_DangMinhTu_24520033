@@ -22,13 +22,13 @@
 ## Output
 
 - `rules_report.jsonl` — Internal Rule Object + `status`/`reason` của từng rule.
-- `alerts.jsonl` — Detection Event (mỗi rule match 1 dòng).
+- `detections.jsonl` — Detection Event (mỗi rule match 1 dòng); `fast.log` — alert dạng ngắn.
 - `trace.jsonl` — mỗi event: `candidates` (sid lấy từ Indexer) và `results` (`MATCH`/`NO_MATCH` + `stage` bị loại).
 - `events.jsonl` — event đã qua parse, decode, preprocess và flow tracking. `engine.log` — cảnh báo khi nạp rule + thống kê engine.
 
 ## Kết quả
 
-1 Detection Event cho frame 4 (`alerts.jsonl`):
+1 Detection Event cho frame 4 (`detections.jsonl`):
 
 | Field | Giá trị |
 |---|---|

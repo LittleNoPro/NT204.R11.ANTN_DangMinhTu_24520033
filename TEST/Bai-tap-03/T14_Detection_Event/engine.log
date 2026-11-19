@@ -1,2 +1,4 @@
 [rules] {'valid': 1}
+2023-11-14T22:13:23Z [CRITICAL] A000001 [sid:100001:1] "Directory traversal detected" TCP 10.0.0.5:52133 -> 192.168.1.20:80
 [engine] {'rules_loaded': 1, 'events_evaluated': 4, 'candidate_rules': 3, 'rejected_flow': 1, 'rejected_content': 1, 'matches': 1}
+[alert] {'received': 1, 'alert': 1}

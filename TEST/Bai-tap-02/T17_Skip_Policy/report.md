@@ -32,7 +32,7 @@ vào thống kê flow, nhưng Core Engine không đánh giá rule trên event đ
 
 ## Output
 
-- `events.jsonl` (3 event), `alerts.jsonl` (Detection Event), `engine.log` (thống kê engine).
+- `events.jsonl` (3 event), `detections.jsonl` (Detection Event), `engine.log` (thống kê engine).
 
 ## Kết quả
 

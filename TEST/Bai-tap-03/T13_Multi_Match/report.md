@@ -20,7 +20,7 @@
 ## Output
 
 - `rules_report.jsonl` — Internal Rule Object + `status`/`reason` của từng rule.
-- `alerts.jsonl` — Detection Event (mỗi rule match 1 dòng).
+- `detections.jsonl` — Detection Event (mỗi rule match 1 dòng); `fast.log` — alert dạng ngắn.
 - `trace.jsonl` — mỗi event: `candidates` (sid lấy từ Indexer) và `results` (`MATCH`/`NO_MATCH` + `stage` bị loại).
 - `events.jsonl` — event đã qua parse, decode, preprocess và flow tracking. `engine.log` — cảnh báo khi nạp rule + thống kê engine.
 
@@ -34,5 +34,5 @@
 | 3130004 | `GET` depth 3 | MATCH (offset 0) |
 | 3130005 | `wp-login` | NO_MATCH, `stage=content` |
 
-`alerts.jsonl` có đủ **4 Detection Event** cho cùng `packet_id=1`, engine không dừng ở
+`detections.jsonl` có đủ **4 Detection Event** cho cùng `packet_id=1`, engine không dừng ở
 rule đầu tiên (`matches: 4`).

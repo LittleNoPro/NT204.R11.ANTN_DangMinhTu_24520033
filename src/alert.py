@@ -68,6 +68,16 @@ def iso_time(epoch):
     return datetime.fromtimestamp(epoch, timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+def fast_line(alert):
+    """Một dòng ngắn cho console/fast.log (giống alert_fast của Snort)."""
+    def endpoint(ip, port):
+        return ip if port is None else f"{ip}:{port}"
+    return (f"{iso_time(alert['first_seen'])} [{alert['severity']}] {alert['alert_id']} "
+            f"[sid:{alert['sid']}:{alert['rev']}] \"{alert['msg']}\" {alert['protocol']} "
+            f"{endpoint(alert['src_ip'], alert['src_port'])} -> "
+            f"{endpoint(alert['dst_ip'], alert['dst_port'])}")
+
+
 class AlertManager:
     def __init__(self, config, next_id=1):
         self.severity_map = config["severity_map"]

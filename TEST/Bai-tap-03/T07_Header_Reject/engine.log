@@ -1,2 +1,4 @@
 [rules] {'valid': 6}
+2023-11-14T22:13:20Z [LOW] A000001 [sid:3070100:1] "T07 đối chứng: header khớp" TCP 10.0.0.1:40000 -> 10.0.0.2:80
 [engine] {'rules_loaded': 6, 'events_evaluated': 1, 'candidate_rules': 4, 'rejected_header': 3, 'matches': 1}
+[alert] {'received': 1, 'alert': 1}
