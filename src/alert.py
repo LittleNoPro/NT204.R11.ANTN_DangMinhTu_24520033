@@ -5,14 +5,18 @@ người vận hành:
 - kiểm tra trường bắt buộc; event hỏng bị từ chối kèm lý do, không làm dừng IDS
 - sinh alert_id duy nhất, chuẩn hóa timestamp/IP/port/protocol
 - ánh xạ priority của rule sang severity theo cấu hình (alert.severity_map)
+- lọc: bỏ alert dưới alert.min_severity hoặc khớp một mục alert.suppress
+  (theo sid, src_ip, dst_ip, protocol — giống suppress/threshold của Snort)
 
 Core Engine chỉ phát Detection Event; mọi quyết định về cảnh báo nằm ở đây.
 """
 
 import ipaddress
+from collections import Counter
 from datetime import datetime, timezone
 
 SEVERITIES = ("CRITICAL", "HIGH", "MEDIUM", "LOW")   # nặng → nhẹ
+SEVERITY_RANK = {name: rank for rank, name in enumerate(SEVERITIES)}
 
 ALERT_SCHEMA = {
     "alert_id": None,
@@ -63,7 +67,52 @@ def iso_time(epoch):
 class AlertManager:
     def __init__(self, config, next_id=1):
         self.severity_map = config["severity_map"]
+        self.min_rank = SEVERITY_RANK[config["min_severity"]]
+        self.suppress = config["suppress"]
         self._next_id = next_id
+        self.stats = Counter()
+
+    def process(self, detection):
+        """Detection Event → (status, alert, reason).
+
+        status: alert (alert mới) | rejected (event hỏng) | filtered (bị lọc).
+        Alert bị lọc vẫn trả về để ghi nhận, nhưng không được cấp alert_id.
+        """
+        self.stats["received"] += 1
+        alert, reason = self.build(detection)
+        if alert is None:
+            status = "rejected"
+        else:
+            reason = self.filter_reason(alert)
+            if reason:
+                status = "filtered"
+            else:
+                status = "alert"
+                alert["alert_id"] = f"A{self._next_id:06d}"
+                self._next_id += 1
+        self.stats[status] += 1
+        return status, alert, reason
+
+    def filter_reason(self, alert):
+        """Lý do bỏ alert, hoặc None nếu giữ."""
+        if SEVERITY_RANK[alert["severity"]] > self.min_rank:
+            return f"severity {alert['severity']} dưới ngưỡng"
+        for entry in self.suppress:
+            if self._suppressed(entry, alert):
+                shown = {k: v if isinstance(v, (int, str)) else str(v) for k, v in entry.items()}
+                return f"suppress {shown}"
+        return None
+
+    @staticmethod
+    def _suppressed(entry, alert):
+        for field, expected in entry.items():
+            value = alert[field]
+            if field in ("src_ip", "dst_ip"):
+                if ipaddress.ip_address(value) not in expected:
+                    return False
+            elif value != expected:
+                return False
+        return True
 
     def severity(self, priority):
         """priority → severity. Mỗi khóa trong map là đầu một khoảng: với map
@@ -76,7 +125,8 @@ class AlertManager:
         return self.severity_map[below[-1] if below else keys[0]]
 
     def build(self, detection):
-        """Detection Event → (alert, None), hoặc (None, lý do) nếu bị từ chối."""
+        """Detection Event → (alert chưa có alert_id, None), hoặc (None, lý do)
+        nếu bị từ chối."""
         if not isinstance(detection, dict):
             return None, "detection event không phải object"
 
@@ -107,7 +157,6 @@ class AlertManager:
         priority = optional("priority", lambda v: _is_int(v) and v > 0)
         alert = {
             **ALERT_SCHEMA,
-            "alert_id": f"A{self._next_id:06d}",
             "timestamp": timestamp,
             "time": iso_time(timestamp),
             "sid": sid,
@@ -128,5 +177,4 @@ class AlertManager:
         if problems:
             alert["status"] = "partial"
             alert["reason"] = "bỏ trường sai: " + ", ".join(problems)
-        self._next_id += 1
         return alert, None

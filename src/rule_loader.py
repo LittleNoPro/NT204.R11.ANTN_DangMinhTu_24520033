@@ -18,12 +18,19 @@ File cấu hình của IDS (rules/engine.json, truyền bằng -c):
   "skip_unknown": false,     # không đánh giá event có protocol ứng dụng UNKNOWN
   "max_payload": null,       # không đánh giá payload lớn hơn N byte (null = không giới hạn)
   "alert": {
-    "severity_map": {"1": "CRITICAL", "2": "HIGH", "3": "MEDIUM", "4": "LOW"}
+    "severity_map": {"1": "CRITICAL", "2": "HIGH", "3": "MEDIUM", "4": "LOW"},
+    "min_severity": "LOW",     # bỏ alert nhẹ hơn mức này
+    "suppress": [              # bỏ alert khớp mọi trường của một mục
+      {"sid": 1000005},
+      {"sid": 100001, "src_ip": "10.0.0.0/8"},
+      {"dst_ip": "192.168.1.53", "protocol": "UDP"}
+    ]
   }
 }
 Đường dẫn trong rule_files tính tương đối theo thư mục chứa file cấu hình.
 """
 
+import ipaddress
 import json
 import os
 
@@ -41,6 +48,8 @@ DEFAULT_CONFIG = {
         # priority của rule → severity; mỗi khóa là đầu một khoảng (4 = "4 trở lên"),
         # rule không có priority lấy severity của khóa lớn nhất
         "severity_map": {1: "CRITICAL", 2: "HIGH", 3: "MEDIUM", 4: "LOW"},
+        "min_severity": "LOW",
+        "suppress": [],
     },
 }
 
@@ -104,6 +113,9 @@ def load_config(path):
     _check(isinstance(config["variables"], dict), f"{path}: variables phải là object")
     _check(isinstance(config["rule_files"], list), f"{path}: rule_files phải là danh sách")
     config["alert"]["severity_map"] = _severity_map(config["alert"]["severity_map"], path)
+    _check(config["alert"]["min_severity"] in SEVERITIES,
+           f"{path}: alert.min_severity phải thuộc {list(SEVERITIES)}")
+    config["alert"]["suppress"] = _suppress_list(config["alert"]["suppress"], path)
 
     base = os.path.dirname(os.path.abspath(path))
     files = []
@@ -131,6 +143,34 @@ def _severity_map(mapping, path):
         _check(severity in SEVERITIES,
                f"{path}: alert.severity_map: {severity!r} không thuộc {list(SEVERITIES)}")
         result[int(priority)] = severity
+    return result
+
+
+SUPPRESS_FIELDS = ("sid", "src_ip", "dst_ip", "protocol")
+
+
+def _suppress_list(entries, path):
+    """Chuẩn hóa alert.suppress: IP/CIDR → ip_network, protocol → chữ hoa."""
+    _check(isinstance(entries, list), f"{path}: alert.suppress phải là danh sách")
+    result = []
+    for entry in entries:
+        _check(isinstance(entry, dict) and entry and set(entry) <= set(SUPPRESS_FIELDS),
+               f"{path}: alert.suppress: {entry!r} phải là object chỉ gồm {list(SUPPRESS_FIELDS)}")
+        item = dict(entry)
+        if "sid" in item:
+            _check(isinstance(item["sid"], int) and not isinstance(item["sid"], bool),
+                   f"{path}: alert.suppress: sid {item['sid']!r} phải là số")
+        for field in ("src_ip", "dst_ip"):
+            if field in item:
+                try:
+                    item[field] = ipaddress.ip_network(str(item[field]), strict=False)
+                except ValueError:
+                    raise ConfigError(f"{path}: alert.suppress: {field} {item[field]!r} không phải IP/CIDR")
+        if "protocol" in item:
+            _check(isinstance(item["protocol"], str),
+                   f"{path}: alert.suppress: protocol phải là chuỗi")
+            item["protocol"] = item["protocol"].upper()
+        result.append(item)
     return result
 
 
