@@ -1,0 +1,4 @@
+[rules] {'valid': 1}
+2025-11-15T00:00:03Z [CRITICAL] A000001 [sid:4070001:1] "Directory traversal" TCP 10.0.0.5:52133 -> 192.168.1.20:80
+[engine] {'rules_loaded': 1, 'events_evaluated': 8, 'candidate_rules': 7, 'rejected_flow': 1, 'rejected_content': 1, 'matches': 5}
+[alert] {'received': 5, 'alert': 1, 'aggregated': 4}

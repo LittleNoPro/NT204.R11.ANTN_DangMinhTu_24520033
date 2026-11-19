@@ -1,0 +1,2 @@
+# TC07 — event lặp trong cửa sổ: cùng sid + src_ip + dst_ip
+alert tcp any any -> any 80 (msg:"Directory traversal"; flow:to_server,established; content:"../"; classtype:web-application-attack; priority:1; sid:4070001; rev:1;)

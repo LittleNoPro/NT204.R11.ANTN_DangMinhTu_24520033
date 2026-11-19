@@ -1,0 +1,83 @@
+{
+  "title": "IDS SECURITY REPORT",
+  "period": {
+    "from": "2025-11-15T00:00:03Z",
+    "to": "2025-11-15T00:00:45Z"
+  },
+  "filters": {},
+  "summary": {
+    "total_alerts": 1,
+    "total_events": 5,
+    "severity": {
+      "CRITICAL": {
+        "alerts": 1,
+        "events": 5
+      },
+      "HIGH": {
+        "alerts": 0,
+        "events": 0
+      },
+      "MEDIUM": {
+        "alerts": 0,
+        "events": 0
+      },
+      "LOW": {
+        "alerts": 0,
+        "events": 0
+      }
+    }
+  },
+  "top_sids": [
+    {
+      "sid": 4070001,
+      "msg": "Directory traversal",
+      "alerts": 1,
+      "events": 5
+    }
+  ],
+  "classtypes": [
+    {
+      "classtype": "web-application-attack",
+      "alerts": 1,
+      "events": 5
+    }
+  ],
+  "top_src_ips": [
+    {
+      "ip": "10.0.0.5",
+      "alerts": 1,
+      "events": 5
+    }
+  ],
+  "top_dst_ips": [
+    {
+      "ip": "192.168.1.20",
+      "alerts": 1,
+      "events": 5
+    }
+  ],
+  "protocols": [
+    {
+      "protocol": "TCP",
+      "alerts": 1,
+      "events": 5
+    }
+  ],
+  "application_protocols": [
+    {
+      "protocol": "HTTP",
+      "alerts": 1,
+      "events": 5
+    }
+  ],
+  "timeline": {
+    "bucket": "hour",
+    "rows": [
+      {
+        "time": "2025-11-15T00:00:00Z",
+        "alerts": 1,
+        "events": 5
+      }
+    ]
+  }
+}

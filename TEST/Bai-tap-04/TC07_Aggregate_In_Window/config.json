@@ -1,0 +1,6 @@
+{
+  "rule_files": ["test.rules"],
+  "alert": {
+    "aggregation": {"enabled": true, "window": 60}
+  }
+}
