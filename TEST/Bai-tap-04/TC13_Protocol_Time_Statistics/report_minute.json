@@ -1,0 +1,150 @@
+{
+  "title": "IDS SECURITY REPORT",
+  "period": {
+    "from": "2025-11-15T01:00:00Z",
+    "to": "2025-11-15T01:59:59Z"
+  },
+  "filters": {},
+  "summary": {
+    "total_alerts": 3,
+    "total_events": 3,
+    "severity": {
+      "CRITICAL": {
+        "alerts": 1,
+        "events": 1
+      },
+      "HIGH": {
+        "alerts": 2,
+        "events": 2
+      },
+      "MEDIUM": {
+        "alerts": 0,
+        "events": 0
+      },
+      "LOW": {
+        "alerts": 0,
+        "events": 0
+      }
+    }
+  },
+  "top_sids": [
+    {
+      "sid": 4130001,
+      "msg": "HTTP directory traversal",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "sid": 4130002,
+      "msg": "DNS query malware domain",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "sid": 4130003,
+      "msg": "SMTP EICAR test string",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "classtypes": [
+    {
+      "classtype": "policy-violation",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "classtype": "trojan-activity",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "classtype": "web-application-attack",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "top_src_ips": [
+    {
+      "ip": "10.0.0.6",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "ip": "10.0.0.7",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "ip": "10.0.0.8",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "top_dst_ips": [
+    {
+      "ip": "192.168.1.20",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "ip": "192.168.1.25",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "ip": "192.168.1.53",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "protocols": [
+    {
+      "protocol": "TCP",
+      "alerts": 2,
+      "events": 2
+    },
+    {
+      "protocol": "UDP",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "application_protocols": [
+    {
+      "protocol": "DNS",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "protocol": "HTTP",
+      "alerts": 1,
+      "events": 1
+    },
+    {
+      "protocol": "SMTP",
+      "alerts": 1,
+      "events": 1
+    }
+  ],
+  "timeline": {
+    "bucket": "minute",
+    "rows": [
+      {
+        "time": "2025-11-15T01:10:00Z",
+        "alerts": 1,
+        "events": 1
+      },
+      {
+        "time": "2025-11-15T01:15:00Z",
+        "alerts": 1,
+        "events": 1
+      },
+      {
+        "time": "2025-11-15T01:40:00Z",
+        "alerts": 1,
+        "events": 1
+      }
+    ]
+  }
+}

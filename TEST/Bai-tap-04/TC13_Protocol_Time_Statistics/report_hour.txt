@@ -1,0 +1,49 @@
+IDS SECURITY REPORT
+Period: 2025-11-15T00:05:00Z -> 2025-11-15T02:50:00Z (UTC)
+Total alerts: 8 (events: 8) | Critical: 4 | High: 4 | Medium: 0 | Low: 0
+Top SID: 4130001 (3) | Top source: 10.0.0.5 (2)
+
+Severity
+  CRITICAL                                     alerts=4     events=4
+  HIGH                                         alerts=4     events=4
+  MEDIUM                                       alerts=0     events=0
+  LOW                                          alerts=0     events=0
+
+Top SID
+  4130001  HTTP directory traversal            alerts=3     events=3
+  4130002  DNS query malware domain            alerts=3     events=3
+  4130003  SMTP EICAR test string              alerts=1     events=1
+  4130004  Reverse shell command               alerts=1     events=1
+
+Classtype
+  trojan-activity                              alerts=4     events=4
+  web-application-attack                       alerts=3     events=3
+  policy-violation                             alerts=1     events=1
+
+Top source IP
+  10.0.0.5                                     alerts=2     events=2
+  10.0.0.7                                     alerts=2     events=2
+  10.0.0.10                                    alerts=1     events=1
+  10.0.0.6                                     alerts=1     events=1
+  10.0.0.8                                     alerts=1     events=1
+
+Top destination IP
+  192.168.1.20                                 alerts=3     events=3
+  192.168.1.53                                 alerts=3     events=3
+  192.168.1.25                                 alerts=1     events=1
+  192.168.1.30                                 alerts=1     events=1
+
+Transport protocol
+  TCP                                          alerts=5     events=5
+  UDP                                          alerts=3     events=3
+
+Application protocol
+  DNS                                          alerts=3     events=3
+  HTTP                                         alerts=3     events=3
+  SMTP                                         alerts=1     events=1
+  none                                         alerts=1     events=1
+
+Alerts per hour
+  2025-11-15T00:00:00Z                         alerts=3     events=3
+  2025-11-15T01:00:00Z                         alerts=3     events=3
+  2025-11-15T02:00:00Z                         alerts=2     events=2

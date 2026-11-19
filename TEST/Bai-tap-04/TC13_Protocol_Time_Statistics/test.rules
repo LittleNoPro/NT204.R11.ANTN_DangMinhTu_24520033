@@ -1,0 +1,5 @@
+# TC13 — thống kê protocol/thời gian: HTTP, DNS, SMTP và TCP không có protocol ứng dụng
+alert tcp any any -> any 80 (msg:"HTTP directory traversal"; content:"../"; classtype:web-application-attack; priority:1; sid:4130001; rev:1;)
+alert udp any any -> any 53 (msg:"DNS query malware domain"; content:"malware"; classtype:trojan-activity; priority:2; sid:4130002; rev:1;)
+alert tcp any any -> any 25 (msg:"SMTP EICAR test string"; content:"EICAR-STANDARD"; classtype:policy-violation; priority:2; sid:4130003; rev:1;)
+alert tcp any any -> any 4444 (msg:"Reverse shell command"; content:"cmd.exe"; classtype:trojan-activity; priority:1; sid:4130004; rev:1;)

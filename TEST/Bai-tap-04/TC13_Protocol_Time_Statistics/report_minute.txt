@@ -1,0 +1,44 @@
+IDS SECURITY REPORT
+Period: 2025-11-15T01:00:00Z -> 2025-11-15T01:59:59Z (UTC)
+Total alerts: 3 (events: 3) | Critical: 1 | High: 2 | Medium: 0 | Low: 0
+Top SID: 4130001 (1) | Top source: 10.0.0.6 (1)
+
+Severity
+  CRITICAL                                     alerts=1     events=1
+  HIGH                                         alerts=2     events=2
+  MEDIUM                                       alerts=0     events=0
+  LOW                                          alerts=0     events=0
+
+Top SID
+  4130001  HTTP directory traversal            alerts=1     events=1
+  4130002  DNS query malware domain            alerts=1     events=1
+  4130003  SMTP EICAR test string              alerts=1     events=1
+
+Classtype
+  policy-violation                             alerts=1     events=1
+  trojan-activity                              alerts=1     events=1
+  web-application-attack                       alerts=1     events=1
+
+Top source IP
+  10.0.0.6                                     alerts=1     events=1
+  10.0.0.7                                     alerts=1     events=1
+  10.0.0.8                                     alerts=1     events=1
+
+Top destination IP
+  192.168.1.20                                 alerts=1     events=1
+  192.168.1.25                                 alerts=1     events=1
+  192.168.1.53                                 alerts=1     events=1
+
+Transport protocol
+  TCP                                          alerts=2     events=2
+  UDP                                          alerts=1     events=1
+
+Application protocol
+  DNS                                          alerts=1     events=1
+  HTTP                                         alerts=1     events=1
+  SMTP                                         alerts=1     events=1
+
+Alerts per minute
+  2025-11-15T01:10:00Z                         alerts=1     events=1
+  2025-11-15T01:15:00Z                         alerts=1     events=1
+  2025-11-15T01:40:00Z                         alerts=1     events=1

@@ -1,0 +1,8 @@
+{"packet_id": 1, "skipped": false, "candidates": [4130001], "results": [{"sid": 4130001, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 2, "skipped": false, "candidates": [4130001], "results": [{"sid": 4130001, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 3, "skipped": false, "candidates": [4130002], "results": [{"sid": 4130002, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 4, "skipped": false, "candidates": [4130001], "results": [{"sid": 4130001, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 5, "skipped": false, "candidates": [4130003], "results": [{"sid": 4130003, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 6, "skipped": false, "candidates": [4130002], "results": [{"sid": 4130002, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 7, "skipped": false, "candidates": [4130002], "results": [{"sid": 4130002, "result": "MATCH", "stage": null, "reason": null}]}
+{"packet_id": 8, "skipped": false, "candidates": [4130004], "results": [{"sid": 4130004, "result": "MATCH", "stage": null, "reason": null}]}
