@@ -1,0 +1,33 @@
+IDS SECURITY REPORT
+Period: 2025-11-15T00:00:03Z -> 2025-11-15T00:03:20Z (UTC)
+Total alerts: 3 (events: 6) | Critical: 3 | High: 0 | Medium: 0 | Low: 0
+Top SID: 4080001 (6) | Top source: 10.0.0.5 (6)
+
+Severity
+  CRITICAL                                     alerts=3     events=6
+  HIGH                                         alerts=0     events=0
+  MEDIUM                                       alerts=0     events=0
+  LOW                                          alerts=0     events=0
+
+Top SID
+  4080001  Directory traversal                 alerts=3     events=6
+
+Classtype
+  web-application-attack                       alerts=3     events=6
+
+Top source IP
+  10.0.0.5                                     alerts=3     events=6
+
+Top destination IP
+  192.168.1.20                                 alerts=3     events=6
+
+Transport protocol
+  TCP                                          alerts=3     events=6
+
+Application protocol
+  HTTP                                         alerts=3     events=6
+
+Alerts per minute
+  2025-11-15T00:00:00Z                         alerts=1     events=3
+  2025-11-15T00:01:00Z                         alerts=1     events=2
+  2025-11-15T00:03:00Z                         alerts=1     events=1

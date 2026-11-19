@@ -1,0 +1,2 @@
+# TC08 — event ngoài cửa sổ: cùng sid + src_ip + dst_ip nhưng cách nhau quá window
+alert tcp any any -> any 80 (msg:"Directory traversal"; flow:to_server,established; content:"../"; classtype:web-application-attack; priority:1; sid:4080001; rev:1;)
