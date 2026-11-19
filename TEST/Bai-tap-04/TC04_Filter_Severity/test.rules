@@ -1,0 +1,5 @@
+# TC04 — lọc theo severity: 4 rule cùng khớp một request, mỗi rule một mức severity
+alert tcp any any -> any 80 (msg:"CRITICAL admin config access"; content:"/admin/"; priority:1; sid:4040001; rev:1;)
+alert tcp any any -> any 80 (msg:"HIGH php request"; content:".php"; priority:2; sid:4040002; rev:1;)
+alert tcp any any -> any 80 (msg:"MEDIUM config keyword"; content:"config"; priority:3; sid:4040003; rev:1;)
+alert tcp any any -> any 80 (msg:"LOW GET request"; content:"GET"; priority:4; sid:4040004; rev:1;)

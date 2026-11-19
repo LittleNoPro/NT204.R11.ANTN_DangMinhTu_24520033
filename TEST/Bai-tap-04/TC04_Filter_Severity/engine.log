@@ -1,0 +1,7 @@
+[rules] {'valid': 4}
+2025-11-15T00:00:03Z [CRITICAL] A000001 [sid:4040001:1] "CRITICAL admin config access" TCP 10.0.0.5:52133 -> 192.168.1.20:80
+2025-11-15T00:00:03Z [HIGH] A000002 [sid:4040002:1] "HIGH php request" TCP 10.0.0.5:52133 -> 192.168.1.20:80
+[alert] filtered: sid 4040003: severity MEDIUM dưới ngưỡng HIGH
+[alert] filtered: sid 4040004: severity LOW dưới ngưỡng HIGH
+[engine] {'rules_loaded': 4, 'events_evaluated': 4, 'candidate_rules': 12, 'rejected_content': 8, 'matches': 4}
+[alert] {'received': 4, 'alert': 2, 'filtered': 2}
