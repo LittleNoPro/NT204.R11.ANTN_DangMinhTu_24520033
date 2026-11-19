@@ -142,7 +142,7 @@ class AlertManager:
     def filter_reason(self, alert):
         """Lý do bỏ alert, hoặc None nếu giữ."""
         if SEVERITY_RANK[alert["severity"]] > self.min_rank:
-            return f"severity {alert['severity']} dưới ngưỡng"
+            return f"severity {alert['severity']} dưới ngưỡng {SEVERITIES[self.min_rank]}"
         for entry in self.suppress:
             if self._suppressed(entry, alert):
                 shown = {k: v if isinstance(v, (int, str)) else str(v) for k, v in entry.items()}

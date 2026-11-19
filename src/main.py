@@ -108,8 +108,9 @@ def open_alerting(args, config, files):
             fast_log.write(line + "\n")
             if args.verbose:
                 print(line, file=sys.stderr)
-        elif status == "rejected" and args.verbose:
-            print(f"[alert] rejected: {reason}", file=sys.stderr)
+        elif status in ("rejected", "filtered") and args.verbose:
+            where = f"sid {alert['sid']}: " if alert else ""
+            print(f"[alert] {status}: {where}{reason}", file=sys.stderr)
 
     return raise_alert, manager
 
